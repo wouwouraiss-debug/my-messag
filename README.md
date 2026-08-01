@@ -96,7 +96,6 @@
     </div>
 
     <script>
-        // تأثير صوتي بسيط أو تنبيه عند فتح الصفحة
         window.onload = function() {
             console.log("Welcome Agent Ayoub!");
         };
