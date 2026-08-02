@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سؤال مهم جداً ❤️</title>
+    <title>رسالة خاصة جداً ❤️</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Cairo', sans-serif, Tahoma;
         }
 
         body {
             background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            font-family: 'Cairo', Tahoma, sans-serif;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,24 +22,74 @@
             position: relative;
         }
 
-        /* خلفية الإيموجي المتحركة (قلوب وورود) */
-        .bg-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 1;
-            pointer-events: none;
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            width: 400px;
+            z-index: 10;
+            animation: fadeIn 1.5s ease-in-out;
         }
 
-        .floating-emoji {
+        h1 {
+            color: #d63031;
+            margin-bottom: 20px;
+            font-size: 26px;
+        }
+
+        p {
+            color: #444;
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .heart-icon {
+            font-size: 50px;
+            animation: pulse 1s infinite alternate;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .btn {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn:hover {
+            background-color: #ff6b81;
+            transform: scale(1.05);
+        }
+
+        /* أنيميشن نبض القلب */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* القلوب المتحركة في الخلفية */
+        .floating-heart {
             position: absolute;
-            bottom: -50px;
+            bottom: -20px;
             font-size: 24px;
-            animation: floatUp 6s linear infinite;
-            opacity: 0.8;
+            animation: floatUp 4s linear infinite;
+            z-index: 1;
+            opacity: 0.7;
         }
 
         @keyframes floatUp {
@@ -48,172 +98,37 @@
                 opacity: 1;
             }
             100% {
-                transform: translateY(-110vh) rotate(360deg);
+                transform: translateY(-105vh) rotate(360deg);
                 opacity: 0;
             }
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-            position: relative;
-            z-index: 2;
-            animation: fadeIn 1.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .heart {
-            font-size: 50px;
-            color: #ff3366;
-            animation: pulse 1s infinite alternate;
-            margin-bottom: 20px;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.15); }
-        }
-
-        h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-
-        .buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            position: relative;
-            height: 60px;
-        }
-
-        button {
-            padding: 12px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.3s ease;
-        }
-
-        #yesBtn {
-            background-color: #28a745;
-            color: white;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        #yesBtn:hover {
-            background-color: #218838;
-            transform: scale(1.05);
-        }
-
-        #noBtn {
-            background-color: #dc3545;
-            color: white;
-            position: absolute;
-            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
-        }
-
-        .success-message {
-            display: none;
-            color: #ff3366;
-            font-size: 22px;
-            font-weight: bold;
-            margin-top: 20px;
-            animation: bounce 0.8s ease infinite alternate;
-        }
-
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-10px); }
         }
     </style>
 </head>
 <body>
 
-    <!-- حاوية الخلفية المتحركة -->
-    <div class="bg-animation" id="bgAnimation"></div>
-
-    <div class="card" id="mainCard">
-        <div class="heart">❤️</div>
-        <h1>هل تقبلين أن تكوني الإنسانة الأغلى في حياتي وتوافقي تكوني حبيبتي؟ 🥰</h1>
-        
-        <div class="buttons" id="btnContainer">
-            <button id="yesBtn" onclick="sayYes()">نعم، بكل سرور! ✨</button>
-            <button id="noBtn" onmouseover="moveButton()" onclick="moveButton()">لا 😢</button>
-        </div>
-
-        <div class="success-message" id="successText">
-            كنت متأكداً أنك لن تقولي لا! أحبكِ جداً ❤️💍
-        </div>
+    <div class="card">
+        <div class="heart-icon">💖</div>
+        <h1>إلى أصدق القلوب وأغلاها</h1>
+        <p>مهما كتبت من كلمات، تعجز العبارات عن وصف مدى روعة وجودكِ. هذه المساحة البسيطة وُجدت لتكون رسالة حب وتقدير خافقة لكل لحظة جميلة تجمعنا.</p>
+        <button class="btn" onclick="alert('أنتِ الأروع دائماً! ✨') اضغط هنا">اضغط هنا</button>
     </div>
 
+    <!-- كود جافاسكريبت لتوليد القلوب المتحركة في الخلفية بشكل تلقائي -->
     <script>
-        const noBtn = document.getElementById('noBtn');
-        const yesBtn = document.getElementById('yesBtn');
-        const successText = document.getElementById('successText');
-        const btnContainer = document.getElementById('btnContainer');
-        const bgAnimation = document.getElementById('bgAnimation');
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = ['❤️', '💖', '✨', '🌹', '💫'][Math.floor(Math.random() * 5)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's'; // سرعة عشوائية
+            document.body.appendChild(heart);
 
-        // مصفوفة الإيموجي الخاصة بالورد والقلوب
-        const emojis = ['❤️', '🌹', '💖', '💐', '🌸', '💕', '🌷', '💘'];
-
-        // دالة لتوليد الإيموجي المتحركة باستمرار في الخلفية
-        function createFloatingEmoji() {
-            const emojiSpan = document.createElement('div');
-            emojiSpan.classList.add('floating-emoji');
-            
-            // اختيار إيموجي عشوائي
-            emojiSpan.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            
-            // مواقع وأحجام عشوائية
-            emojiSpan.style.left = Math.random() * 100 + 'vw';
-            emojiSpan.style.fontSize = (Math.random() * 20 + 18) + 'px';
-            
-            // سرعة حركة عشوائية
-            const duration = Math.random() * 3 + 4; // ما بين 4 و 7 ثواني
-            emojiSpan.style.animationDuration = duration + 's';
-
-            bgAnimation.appendChild(emojiSpan);
-
-            // إزالة الإيموجي بعد انتهاء الأنيميشن لتخفيف الحمل عن المتصفح
             setTimeout(() => {
-                emojiSpan.remove();
-            }, duration * 1000);
+                heart.remove();
+            }, 6000);
         }
 
-        // توليد إيموجي كل 300 جزء من الثانية
-        setInterval(createFloatingEmoji, 300);
-
-        // دالة زر "لا" الهارب
-        function moveButton() {
-            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 100);
-            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 100);
-            
-            noBtn.style.position = 'fixed';
-            noBtn.style.left = `${Math.max(20, x)}px`;
-            noBtn.style.top = `${Math.max(20, y)}px`;
-        }
-
-        // دالة زر "نعم"
-        function sayYes() {
-            btnContainer.style.display = 'none';
-            document.querySelector('h1').style.display = 'none';
-            document.querySelector('.heart').style.fontSize = '80px';
-            successText.style.display = 'block';
-        }
+        setInterval(createHeart, 400);
     </script>
 
 </body>
