@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الفعاليات مع شات أونلاين 🎲💬</title>
+    <title>لعبة الفعاليات أونلاين 🎲💬</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
@@ -71,15 +71,6 @@
         .screen { display: none; }
         .active { display: block; }
 
-        .my-id-box {
-            background: rgba(0, 206, 201, 0.1);
-            border: 1px dashed #00cec9;
-            padding: 10px;
-            border-radius: 10px;
-            margin: 15px 0;
-            word-break: break-all;
-        }
-
         .scoreboard {
             display: flex;
             justify-content: space-around;
@@ -131,7 +122,6 @@
             min-height: 20px;
         }
 
-        /* --- تصميم الشات --- */
         .chat-section {
             margin-top: 15px;
             border-top: 1px dashed rgba(255,255,255,0.2);
@@ -160,15 +150,8 @@
             word-break: break-word;
         }
 
-        .chat-msg.me {
-            background: var(--primary);
-            align-self: flex-start;
-        }
-
-        .chat-msg.other {
-            background: rgba(0, 206, 201, 0.3);
-            align-self: flex-end;
-        }
+        .chat-msg.me { background: var(--primary); align-self: flex-start; }
+        .chat-msg.other { background: rgba(0, 206, 201, 0.3); align-self: flex-end; }
 
         .chat-input-group {
             display: flex;
@@ -176,18 +159,14 @@
             margin-top: 8px;
         }
 
-        .chat-input-group input {
-            flex: 1;
-            margin: 0;
-            text-align: right;
-            padding: 8px 15px;
-        }
-
-        .chat-input-group button {
-            width: auto;
-            padding: 8px 18px;
-            margin: 0;
-            border-radius: 20px;
+        .chat-input-group input { flex: 1; margin: 0; text-align: right; padding: 8px 15px; }
+        .chat-input-group button { width: auto; padding: 8px 18px; margin: 0; border-radius: 20px; }
+        
+        .room-choice-box {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -196,26 +175,24 @@
     <div class="container">
         <h1>🎲 مسابقة الفعاليات + الشات 💬</h1>
 
-        <!-- شاشة الدخول -->
+        <!-- شاشة تسجيل الاسم -->
         <div id="login-screen" class="screen active">
             <input type="text" id="username" placeholder="اكتب اسمك هنا...">
-            <button onclick="initPlayer()">دخول اللعبة 🚀</button>
+            <button onclick="saveName()">التالي 🚀</button>
         </div>
 
-        <!-- شاشة الربط -->
-        <div id="connect-screen" class="screen">
+        <!-- شاشة اختيار الغرفة برقم من 4 أرقام -->
+        <div id="room-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
-            
-            <div class="my-id-box">
-                <small>رمز الجهاز تاعك (ابعثوا لصاحبك):</small><br>
-                <b id="my-peer-id" style="font-size: 18px; color:#00cec9;">جاري التجهيز...</b>
+            <p style="font-size: 14px; color: #ccc;">اتفق مع صاحبك على كود من 4 أرقام (مثال: 1234)</p>
+
+            <div class="room-choice-box">
+                <input type="number" id="room-code" placeholder="أدخل كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
+                
+                <button onclick="createRoom()">إنشاء غرفة بهاد الكود 👑</button>
+                <button onclick="joinRoom()" style="background: linear-gradient(45deg, #00b894, #00cec9);">دخول لغرفة صاحبك 🔗</button>
             </div>
-
-            <hr style="opacity: 0.2; margin: 15px 0;">
-
-            <input type="text" id="other-peer-id" placeholder="أدخل رمز جهاز صاحبك...">
-            <button onclick="connectToPeer()">اتصال وتوصيل الأجهزة 🔗</button>
-            <p id="status-msg" style="color:#a29bfe; font-size:14px;"></p>
+            <p id="status-msg" style="color:#a29bfe; font-size:14px; margin-top:10px;"></p>
         </div>
 
         <!-- شاشة اللعب + الشات -->
@@ -236,7 +213,6 @@
             <div class="turn-box" id="turn-display">في انتظار القرعة...</div>
             <div class="q-box" id="question-text">اضغط على الزر الفوقاني باش تسحب سؤال!</div>
 
-            <!-- خيارات الإجابة -->
             <div class="options-grid" id="options-container" style="display:none;">
                 <button class="opt-btn" onclick="checkAnswer(0)"></button>
                 <button class="opt-btn" onclick="checkAnswer(1)"></button>
@@ -246,7 +222,6 @@
 
             <div class="feedback-msg" id="feedback-text"></div>
 
-            <!-- قسم المحادثة (الشات) -->
             <div class="chat-section">
                 <div class="chat-box" id="chat-box">
                     <small style="color: #aaa; text-align: center;">بداية المحادثة...</small>
@@ -278,17 +253,35 @@
         let currentQuestion = null;
         let isMyTurn = false;
 
-        function initPlayer() {
+        const ROOM_PREFIX = "ayoub-quiz-room-"; // بادئة خاصة باش تعطينا اسم فريد
+
+        function saveName() {
             myName = document.getElementById('username').value.trim();
             if(!myName) return alert("يرجى كتابة اسمك أولاً!");
 
             document.getElementById('player-name-display').innerText = myName;
+            showScreen('room-screen');
+        }
 
-            peer = new Peer();
+        // إنشاء غرفة بالكود (اللاعب الأول)
+        function createRoom() {
+            const code = document.getElementById('room-code').value.trim();
+            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
+
+            document.getElementById('status-msg').innerText = "جاري إنشاء الغرفة وبانتظار المنافس...";
+            
+            const customPeerId = ROOM_PREFIX + code;
+            peer = new Peer(customPeerId);
 
             peer.on('open', (id) => {
-                document.getElementById('my-peer-id').innerText = id;
-                showScreen('connect-screen');
+                document.getElementById('status-msg').innerText = `تم إنشاء الغرفة رقم (${code})! قول لصاحبك يدخل برقم ${code}`;
+            });
+
+            peer.on('error', (err) => {
+                if(err.type === 'unavailable-id') {
+                    alert("هاد الكود مستعمل حالياً، جرب كود واحد آخر من 4 أرقام!");
+                    document.getElementById('status-msg').innerText = "";
+                }
             });
 
             peer.on('connection', (connection) => {
@@ -297,13 +290,25 @@
             });
         }
 
-        function connectToPeer() {
-            const destId = document.getElementById('other-peer-id').value.trim();
-            if(!destId) return alert("أدخل رمز جهاز صاحبك!");
+        // الدخول لغرفة صاحبك (اللاعب الثاني)
+        function joinRoom() {
+            const code = document.getElementById('room-code').value.trim();
+            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
 
-            document.getElementById('status-msg').innerText = "جاري الاتصال...";
-            conn = peer.connect(destId);
-            setupConnection();
+            document.getElementById('status-msg').innerText = "جاري الدخول للغرفة...";
+            
+            peer = new Peer(); // إنشاء معرف عشوائي للاعب الثاني
+
+            peer.on('open', () => {
+                const targetPeerId = ROOM_PREFIX + code;
+                conn = peer.connect(targetPeerId);
+                setupConnection();
+            });
+
+            peer.on('error', (err) => {
+                alert("ما قدرناش ندخلوا للغرفة، تأكد من الرقم ولا قل لصاحبك ينشئها هو الأول!");
+                document.getElementById('status-msg').innerText = "";
+            });
         }
 
         function setupConnection() {
@@ -398,7 +403,6 @@
             }
         }
 
-        /* --- وظائف الشات --- */
         function sendChatMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
