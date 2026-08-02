@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لعبة الفعاليات أونلاين 🎲</title>
-    <!-- مكتبة PeerJS للربط المباشر P2P أونلاين -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
@@ -13,6 +12,7 @@
             --primary: #6c5ce7;
             --accent: #fd79a8;
             --success: #00b894;
+            --danger: #d63031;
         }
 
         body {
@@ -90,7 +90,7 @@
         }
 
         .p-card { flex: 1; padding: 5px; }
-        .score { font-size: 24px; color: #ffeaa7; font-weight: bold; }
+        .score { font-size: 26px; color: #ffeaa7; font-weight: bold; }
 
         .q-box {
             background: rgba(255,255,255,0.08);
@@ -98,15 +98,38 @@
             padding: 15px;
             border-radius: 10px;
             margin: 15px 0;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 18px;
+            font-weight: bold;
         }
 
         .turn-box { font-size: 20px; color: #00cec9; font-weight: bold; margin: 10px 0; }
-        .btn-success { background: var(--success); }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .opt-btn:hover { background: var(--primary); }
+        .opt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .feedback-msg {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+            min-height: 25px;
+        }
     </style>
 </head>
 <body>
@@ -114,13 +137,13 @@
     <div class="container">
         <h1>🎲 مسابقة الفعاليات أونلاين</h1>
 
-        <!-- شاشة تسجيل الاسم -->
+        <!-- شاشة الدخول -->
         <div id="login-screen" class="screen active">
             <input type="text" id="username" placeholder="اكتب اسمك هنا...">
             <button onclick="initPlayer()">دخول اللعبة 🚀</button>
         </div>
 
-        <!-- شاشة الربط بين الأجهزة -->
+        <!-- شاشة الربط -->
         <div id="connect-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
             
@@ -149,30 +172,61 @@
                 </div>
             </div>
 
-            <button onclick="rollTurn()">🎲 سحب القرعة والسؤال!</button>
+            <button id="roll-btn" onclick="rollTurn()">🎲 سحب القرعة والسؤال!</button>
 
-            <div class="turn-box" id="turn-display">في انتظار السحب...</div>
-            <div class="q-box" id="question-text">اضغط على الزر للسحب لك ولصاحبك بنفس اللحظة!</div>
+            <div class="turn-box" id="turn-display">في انتظار القرعة...</div>
+            <div class="q-box" id="question-text">اضغط على الزر الفوقاني باش تسحب سؤال!</div>
 
-            <button class="btn-success" id="add-point-btn" style="display:none;" onclick="addScore()">إجابة صحيحة (+1 نقطة) ✅</button>
+            <!-- خيارات الإجابة -->
+            <div class="options-grid" id="options-container" style="display:none;">
+                <button class="opt-btn" onclick="checkAnswer(0)"></button>
+                <button class="opt-btn" onclick="checkAnswer(1)"></button>
+                <button class="opt-btn" onclick="checkAnswer(2)"></button>
+                <button class="opt-btn" onclick="checkAnswer(3)"></button>
+            </div>
+
+            <div class="feedback-msg" id="feedback-text"></div>
         </div>
     </div>
 
     <script>
-        // قائمة الأسئلة والفعاليات
-        const questions = [
-            "ما هو الحيوان الذي لا ينام منذ ولادته؟",
-            "شيء كلما أخذت منه كبر؟",
-            "تحدي: قل ثلاث كلمات سريعة بدون خطأ!",
-            "ما هي العاصمة التي يطلق عليها مدينة النور؟",
-            "سؤال صراحة: ما هي أكره عادة عند منافسك؟",
-            "تحدي: قم بتقليد صوت حيوان يختاره منافسك!",
-            "ما هو أصغر كوكب في المجموعة الشمسية؟",
-            "شيء يملك أسناناً ولكنه لا يعض؟",
-            "تحدي: اذكر 5 أشياء باللون الأزرق حولك خلال 10 ثواني!",
-            "كم قلبًا يوجد لدى الأخطبوط؟",
-            "سؤال صراحة: لو أُتيحت لك فرصة لتغيير شيء واحد في حياتك، ماذا سيكون؟",
-            "تحدي: حاول عدم الضحك لمدة 30 ثانية أمام المنافس!"
+        // بنك الأسئلة مع الإجابات الصحيحة والخيارات
+        const quizData = [
+            {
+                q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟",
+                options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"],
+                correct: 1
+            },
+            {
+                q: "ما هو أصغر كوكب في المجموعة الشمسية؟",
+                options: ["المريخ", "عطارد", "الزهرة", "بلوتو"],
+                correct: 1
+            },
+            {
+                q: "كم قلبًا يوجد لدى الأخطبوط؟",
+                options: ["قلب واحد", "قلبان", "3 قلوب", "4 قلوب"],
+                correct: 2
+            },
+            {
+                q: "شيء كلما أخذت منه كبر؟",
+                options: ["الحفرة", "العمر", "المال", "العلم"],
+                correct: 0
+            },
+            {
+                q: "ما هي العاصمة التي يطلق عليها مدينة النور؟",
+                options: ["لندن", "باريس", "روما", "مدريد"],
+                correct: 1
+            },
+            {
+                q: "شيء يملك أسناناً ولكنه لا يعض؟",
+                options: ["المشط", "المنشار", "الزيبار", "القرش"],
+                correct: 0
+            },
+            {
+                q: "ما هو الحيوان الذي يلقب بسفينة الصحراء؟",
+                options: ["الحصان", "الجمل", "الفهد", "الأفعى"],
+                correct: 1
+            }
         ];
 
         let peer = null;
@@ -181,6 +235,8 @@
         let otherName = "المنافس";
         let myScore = 0;
         let otherScore = 0;
+        let currentQuestion = null;
+        let isMyTurn = false;
 
         function initPlayer() {
             myName = document.getElementById('username').value.trim();
@@ -228,18 +284,19 @@
                 showScreen('game-screen');
                 updateUI();
             } else if(data.type === 'roll') {
-                displayRollResult(data.turnIsP1, data.qIndex);
-            } else if(data.type === 'add-score') {
-                otherScore++;
+                displayQuestion(data.turnIsP1, data.qIndex);
+            } else if(data.type === 'answer-result') {
+                otherScore = data.newScore;
                 updateUI();
+                showFeedback(data.msg, data.isCorrect);
             }
         }
 
         function rollTurn() {
             const isMe = Math.random() < 0.5;
-            const qIndex = Math.floor(Math.random() * questions.length);
+            const qIndex = Math.floor(Math.random() * quizData.length);
 
-            displayRollResult(isMe, qIndex);
+            displayQuestion(isMe, qIndex);
 
             if(conn) {
                 conn.send({
@@ -250,22 +307,63 @@
             }
         }
 
-        function displayRollResult(isItMe, qIndex) {
-            const turnText = isItMe ? `🎲 الدور عليك يا: ${myName}!` : `🎲 الدور على: ${otherName}`;
+        function displayQuestion(isItMe, qIndex) {
+            isMyTurn = isItMe;
+            currentQuestion = quizData[qIndex];
             
-            document.getElementById('turn-display').innerText = turnText;
-            document.getElementById('question-text').innerText = questions[qIndex];
-            document.getElementById('add-point-btn').style.display = isItMe ? 'block' : 'none';
+            document.getElementById('turn-display').innerText = isItMe ? `🎲 الدور عليك يا: ${myName}!` : `🎲 الدور على: ${otherName}`;
+            document.getElementById('question-text').innerText = currentQuestion.q;
+            document.getElementById('feedback-text').innerText = "";
+
+            const optButtons = document.querySelectorAll('.opt-btn');
+            const optionsGrid = document.getElementById('options-container');
+            
+            optionsGrid.style.display = 'grid';
+
+            currentQuestion.options.forEach((opt, idx) => {
+                optButtons[idx].innerText = opt;
+                // تفعيل الأزرار فقط للاعب اللي عليه الدور
+                optButtons[idx].disabled = !isItMe;
+            });
+
+            // إخفاء زر القرعة أثناء الإجابة
+            document.getElementById('roll-btn').style.display = 'none';
         }
 
-        function addScore() {
-            myScore++;
-            updateUI();
-            document.getElementById('add-point-btn').style.display = 'none';
+        function checkAnswer(selectedIndex) {
+            if(!isMyTurn) return;
 
-            if(conn) {
-                conn.send({ type: 'add-score' });
+            const isCorrect = (selectedIndex === currentQuestion.correct);
+            
+            if(isCorrect) {
+                myScore += 1;
+                showFeedback("إجابة صحيحة! 🎉 (+1 نقطة)", true);
+            } else {
+                myScore -= 1; // خصم نقطة عند الإجابة الخاطئة
+                showFeedback(`إجابة خاطئة! ❌ (-1 نقطة) - الصحيحة هي: ${currentQuestion.options[currentQuestion.correct]}`, false);
             }
+
+            updateUI();
+
+            // تعطيل الاختيارات بعد الإجابة وإظهار زر القرعة
+            document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
+            document.getElementById('roll-btn').style.display = 'block';
+
+            // إرسال التحديث للمنافس
+            if(conn) {
+                conn.send({
+                    type: 'answer-result',
+                    newScore: myScore,
+                    isCorrect: isCorrect,
+                    msg: isCorrect ? `جاوب ${myName} إجابة صحيحة! ✅` : `غلط ${myName} في الإجابة! ❌`
+                });
+            }
+        }
+
+        function showFeedback(text, isCorrect) {
+            const fb = document.getElementById('feedback-text');
+            fb.innerText = text;
+            fb.style.color = isCorrect ? 'var(--success)' : 'var(--danger)';
         }
 
         function updateUI() {
@@ -282,4 +380,3 @@
     </script>
 </body>
 </html>
-
