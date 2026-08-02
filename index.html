@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
-    <!-- مكتبات MQTT و PeerJS للصوت المباشر -->
+    <!-- مكتبات MQTT و PeerJS -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
@@ -84,12 +84,38 @@
         .screen { display: none; }
         .active { display: block; }
 
-        .mic-btn {
-            background: #2d3436;
-            margin-bottom: 10px;
+        /* --- الأزرار العائمة في الأسفل (مايك + شات) --- */
+        .bottom-floating-btns {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 99;
         }
-        .mic-btn.active-mic {
+
+        .icon-btn {
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #00cec9, var(--primary));
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .icon-btn.mic-off {
+            background: #2d3436;
+        }
+
+        .icon-btn.mic-on {
             background: var(--success);
+            box-shadow: 0 0 15px var(--success);
         }
 
         .leaderboard-box {
@@ -160,18 +186,7 @@
             margin-top: 10px;
         }
 
-        .chat-toggle-btn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: auto;
-            padding: 12px 20px;
-            border-radius: 30px;
-            background: linear-gradient(45deg, #00cec9, var(--primary));
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            z-index: 99;
-        }
-
+        /* --- الشات الجانبي --- */
         .side-chat {
             position: fixed;
             top: 0;
@@ -222,8 +237,13 @@
 </head>
 <body>
 
-    <button class="chat-toggle-btn" onclick="toggleChat()">💬 الشات</button>
+    <!-- أزرار المايك والشات العائمة جانب بعضها -->
+    <div class="bottom-floating-btns" id="game-controls" style="display:none;">
+        <button id="mic-btn" class="icon-btn mic-off" onclick="toggleMic()" title="المايك">🎙️</button>
+        <button class="icon-btn" onclick="toggleChat()" title="الشات">💬</button>
+    </div>
 
+    <!-- لوحة الشات الجانبية -->
     <div class="side-chat" id="side-chat">
         <div class="chat-header">
             <h4 style="margin:0; color:#00cec9;">دردشة الغرفة 💬</h4>
@@ -252,8 +272,6 @@
         </div>
 
         <div id="game-screen" class="screen">
-            <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️ تشغيل المايك الجماعي</button>
-
             <div class="leaderboard-box" id="leaderboard"></div>
 
             <button id="roll-btn" onclick="rollTurn()">🎲 سحب فعالية جديدة!</button>
@@ -281,7 +299,6 @@
         </div>
     </div>
 
-    <!-- حاوية الأصوات المباشرة من باقي اللاعبين -->
     <div id="audio-container"></div>
 
     <script>
@@ -326,19 +343,18 @@
             const code = document.getElementById('room-code').value.trim();
             if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
 
-            document.getElementById('status-msg').innerText = "جاري الاتصال بالنظام...";
+            document.getElementById('status-msg').innerText = "جاري الاتصال...";
             roomTopic = "ayoub_discord_room_" + code;
 
-            // إعداد نظام الصوت (PeerJS)
             peer = new Peer(myId + "_" + code);
 
             peer.on('open', () => {
-                // الاتصال بـ MQTT
                 client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
                 client.on('connect', () => {
                     client.subscribe(roomTopic);
                     showScreen('game-screen');
+                    document.getElementById('game-controls').style.display = 'flex';
 
                     players[myId] = { name: myName, score: 0, peerId: peer.id };
                     updateUI();
@@ -354,7 +370,6 @@
                 });
             });
 
-            // استقبال المكالمات الصوتية من اللاعبين الآخرين
             peer.on('call', (call) => {
                 call.answer(localAudioStream);
                 call.on('stream', (remoteStream) => {
@@ -377,7 +392,6 @@
                 appendChatMessage("النظام", `انضم ${safeName} للغرفة! 🎉`, 'other');
                 broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score, peerId: peer.id });
                 
-                // إذا كان المايك شغال اتصل بالعضو الجديد صوتياً
                 if(isMicOn && localAudioStream && data.peerId) {
                     callPeer(data.peerId);
                 }
@@ -400,19 +414,16 @@
             }
         }
 
-        // --- نظام المايك المطور عبر PeerJS ---
         async function toggleMic() {
             const btn = document.getElementById('mic-btn');
 
             if (!isMicOn) {
                 try {
-                    // طلب إذن المايك من المتصفح
                     localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                     isMicOn = true;
-                    btn.classList.add('active-mic');
-                    btn.innerText = "🎙️ كتم المايك (شغال 🟢)";
+                    btn.classList.remove('mic-off');
+                    btn.classList.add('mic-on');
 
-                    // الاتصال صوتياً بجميع اللاعبين المتواجدين في الغرفة
                     Object.values(players).forEach(p => {
                         if(p.peerId && p.peerId !== peer.id) {
                             callPeer(p.peerId);
@@ -420,16 +431,15 @@
                     });
 
                 } catch (err) {
-                    alert("يرجى إعطاء صلاحية استخدام المايك في المتصفح ليشتغل الصوت!");
+                    alert("يرجى إعطاء صلاحية استخدام المايك!");
                 }
             } else {
-                // إيقاف المايك
                 if (localAudioStream) {
                     localAudioStream.getAudioTracks().forEach(track => track.enabled = false);
                 }
                 isMicOn = false;
-                btn.classList.remove('active-mic');
-                btn.innerText = "🎙️ تشغيل المايك الجماعي";
+                btn.classList.remove('mic-on');
+                btn.classList.add('mic-off');
             }
         }
 
