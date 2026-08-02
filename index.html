@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الفعاليات أونلاين 🎲💬</title>
+    <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
     <!-- مكتبة WebSocket MQTT المباشرة -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -14,6 +14,7 @@
             --accent: #fd79a8;
             --success: #00b894;
             --danger: #d63031;
+            --warning: #fdcb6e;
         }
 
         body {
@@ -27,20 +28,22 @@
             align-items: center;
             padding: 15px;
             direction: rtl;
+            overflow-x: hidden;
         }
 
         .container {
-            background: rgba(30, 27, 75, 0.9);
+            background: rgba(30, 27, 75, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 20px;
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
         }
 
-        h1 { color: #00cec9; font-size: 22px; margin-bottom: 15px; }
+        h1 { color: #00cec9; font-size: 22px; margin-bottom: 10px; }
 
         input, button {
             width: 100%;
@@ -72,29 +75,55 @@
         .screen { display: none; }
         .active { display: block; }
 
-        .scoreboard {
-            display: flex;
-            justify-content: space-around;
+        /* --- جدول المتصدرين --- */
+        .leaderboard-box {
             background: rgba(0,0,0,0.3);
-            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
-            margin-bottom: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            max-height: 120px;
+            overflow-y: auto;
         }
 
-        .p-card { flex: 1; padding: 5px; }
-        .score { font-size: 24px; color: #ffeaa7; font-weight: bold; }
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            margin: 4px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .player-row.me {
+            border: 1px solid var(--accent);
+            background: rgba(253, 121, 168, 0.2);
+        }
+
+        /* --- بطاقات التحديات والفعاليات --- */
+        .q-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--accent);
+            margin-bottom: 8px;
+        }
 
         .q-box {
             background: rgba(255,255,255,0.08);
             border-right: 4px solid var(--accent);
-            padding: 12px;
+            padding: 15px;
             border-radius: 10px;
             margin: 10px 0;
             font-size: 16px;
             font-weight: bold;
+            line-height: 1.5;
         }
 
-        .turn-box { font-size: 18px; color: #00cec9; font-weight: bold; margin: 8px 0; }
+        .turn-box { font-size: 15px; color: #00cec9; font-weight: bold; margin: 8px 0; }
 
         .options-grid {
             display: grid;
@@ -116,6 +145,12 @@
         .opt-btn:hover { background: var(--primary); }
         .opt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        .text-answer-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
         .feedback-msg {
             font-size: 15px;
             font-weight: bold;
@@ -123,58 +158,118 @@
             min-height: 20px;
         }
 
-        .chat-section {
-            margin-top: 15px;
-            border-top: 1px dashed rgba(255,255,255,0.2);
-            padding-top: 10px;
+        /* --- المتجر --- */
+        .shop-btn-top {
+            background: linear-gradient(45deg, #f0932b, #ffbe76);
+            margin-bottom: 10px;
+        }
+
+        .shop-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 12, 32, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 50;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .shop-item {
+            background: rgba(255,255,255,0.08);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- الشات الجانبي المميز --- */
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: auto;
+            padding: 12px 20px;
+            border-radius: 30px;
+            background: linear-gradient(45deg, #00cec9, var(--primary));
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 99;
+        }
+
+        .side-chat {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100%;
+            background: rgba(15, 12, 32, 0.98);
+            border-right: 1px solid var(--primary);
+            box-shadow: 5px 0 25px rgba(0,0,0,0.7);
+            transition: left 0.3s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        .side-chat.open { left: 0; }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
         }
 
         .chat-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            height: 120px;
+            flex: 1;
             overflow-y: auto;
-            padding: 8px;
-            text-align: right;
-            font-size: 13px;
+            margin: 10px 0;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
+            text-align: right;
         }
 
         .chat-msg {
             background: rgba(255, 255, 255, 0.1);
-            padding: 5px 10px;
-            border-radius: 8px;
-            width: fit-content;
-            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 13px;
             word-break: break-word;
         }
 
         .chat-msg.me { background: var(--primary); align-self: flex-start; }
         .chat-msg.other { background: rgba(0, 206, 201, 0.3); align-self: flex-end; }
-
-        .chat-input-group {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-        }
-
-        .chat-input-group input { flex: 1; margin: 0; text-align: right; padding: 8px 15px; }
-        .chat-input-group button { width: auto; padding: 8px 18px; margin: 0; border-radius: 20px; }
-        
-        .room-choice-box {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 15px;
-            margin-top: 15px;
-        }
     </style>
 </head>
 <body>
 
+    <!-- زر فتح الشات الجانبي -->
+    <button class="chat-toggle-btn" onclick="toggleChat()">💬 الشات الجماعي</button>
+
+    <!-- لوحة الشات الجانبية -->
+    <div class="side-chat" id="side-chat">
+        <div class="chat-header">
+            <h4 style="margin:0; color:#00cec9;">دردشة الغرفة 💬</h4>
+            <button onclick="toggleChat()" style="width:auto; padding:3px 10px; margin:0; background:var(--danger);">✕</button>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <small style="color: #aaa; text-align: center;">مرحباً بكم في المحادثة!</small>
+        </div>
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
+            <button onclick="sendChatMessage()" style="width:auto; padding:8px 15px; margin:0;">إرسال</button>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>🎲 مسابقة الفعاليات + الشات 💬</h1>
+        <h1>🎲 كوكتيل الفعاليات الجماعية 🎤</h1>
 
         <div id="login-screen" class="screen active">
             <input type="text" id="username" placeholder="اكتب اسمك هنا...">
@@ -183,197 +278,276 @@
 
         <div id="room-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
-            <p style="font-size: 14px; color: #ccc;">أدخل كود الغرفة (4 أرقام) للدخول مع صاحبك</p>
-
-            <div class="room-choice-box">
-                <input type="number" id="room-code" placeholder="أدخل كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
-                <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
-            </div>
+            <input type="number" id="room-code" placeholder="أدخل كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
+            <button onclick="joinGameRoom()">دخول الغرفة الجماعية 🔗</button>
             <p id="status-msg" style="color:#a29bfe; font-size:14px; margin-top:10px;"></p>
         </div>
 
         <div id="game-screen" class="screen">
-            <div class="scoreboard">
-                <div class="p-card">
-                    <div id="p1-title">أنت</div>
-                    <div class="score" id="p1-score">0</div>
+            <button class="shop-btn-top" onclick="toggleShop(true)">🛒 متجر الفعاليات (نقاطك: <span id="my-score-display">0</span>)</button>
+
+            <div class="leaderboard-box" id="leaderboard"></div>
+
+            <button id="roll-btn" onclick="rollTurn()">🎲 سحب فعالية جديدة للجميع!</button>
+
+            <div class="turn-box" id="turn-display">في انتظار سحب الفعالية...</div>
+
+            <div id="activity-card" style="display:none;">
+                <span class="q-type-badge" id="q-badge">فعالية</span>
+                <div class="q-box" id="question-text"></div>
+
+                <!-- للفعاليات الصوتية -->
+                <button id="audio-play-btn" style="display:none; background:#00b894; margin-bottom:10px;" onclick="playMelody()">🎵 تشغيل اللحن / المقطع</button>
+
+                <!-- خيارات متعدّدة -->
+                <div class="options-grid" id="options-container" style="display:none;">
+                    <button class="opt-btn" onclick="checkAnswer(0)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(1)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(2)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(3)"></button>
                 </div>
-                <div class="p-card">
-                    <div id="p2-title">المنافس</div>
-                    <div class="score" id="p2-score">0</div>
+
+                <!-- إدخال كتابي (للكلمات والأغاني) -->
+                <div class="text-answer-group" id="text-input-container" style="display:none;">
+                    <input type="text" id="text-answer-input" placeholder="اكتب إجابتك هنا...">
+                    <button onclick="checkTextAnswer()" style="width:auto; padding:8px 20px;">تأكيد 🎯</button>
                 </div>
-            </div>
-
-            <button id="roll-btn" onclick="rollTurn()">🎲 سحب القرعة والسؤال!</button>
-
-            <div class="turn-box" id="turn-display">في انتظار دخول اللاعب الثاني...</div>
-            <div class="q-box" id="question-text">اضغط على الزر الفوقاني باش تسحب سؤال!</div>
-
-            <div class="options-grid" id="options-container" style="display:none;">
-                <button class="opt-btn" onclick="checkAnswer(0)"></button>
-                <button class="opt-btn" onclick="checkAnswer(1)"></button>
-                <button class="opt-btn" onclick="checkAnswer(2)"></button>
-                <button class="opt-btn" onclick="checkAnswer(3)"></button>
             </div>
 
             <div class="feedback-msg" id="feedback-text"></div>
+        </div>
 
-            <div class="chat-section">
-                <div class="chat-box" id="chat-box">
-                    <small style="color: #aaa; text-align: center;">بداية المحادثة...</small>
-                </div>
-                <div class="chat-input-group">
-                    <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
-                    <button onclick="sendChatMessage()">إرسال 📩</button>
-                </div>
+        <!-- نافذة المتجر -->
+        <div class="shop-modal" id="shop-modal">
+            <h3 style="color:#fdcb6e;">🛒 متجر الميزات</h3>
+            <div class="shop-item">
+                <span>💡 حجب خيارين خاطئين</span>
+                <button onclick="buyItem('5050', 2)" style="width:auto; padding:5px 12px; margin:0;">2 نقاط</button>
             </div>
+            <div class="shop-item">
+                <span>🔥 مضاعف النقاط (x2)</span>
+                <button onclick="buyItem('double', 3)" style="width:auto; padding:5px 12px; margin:0;">3 نقاط</button>
+            </div>
+            <button onclick="toggleShop(false)" style="background:var(--danger); margin-top:15px;">إغلاق المتجر</button>
         </div>
     </div>
 
     <script>
-        const quizData = [
-            { q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟", options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"], correct: 1 },
-            { q: "ما هو أصغر كوكب في المجموعة الشمسية؟", options: ["المريخ", "عطارد", "الزهرة", "بلوتو"], correct: 1 },
-            { q: "كم قلبًا يوجد لدى الأخطبوط؟", options: ["قلب واحد", "قلبان", "3 قلوب", "4 قلوب"], correct: 2 },
-            { q: "شيء كلما أخذت منه كبر؟", options: ["الحفرة", "العمر", "المال", "العلم"], correct: 0 },
-            { q: "ما هي العاصمة التي يطلق عليها مدينة النور؟", options: ["لندن", "باريس", "روما", "مدريد"], correct: 1 },
-            { q: "شيء يملك أسناناً ولكنه لا يعض؟", options: ["المشط", "المنشار", "الزيبار", "القرش"], correct: 0 }
+        // كوكتيل الفعاليات المتنوعة
+        const eventsData = [
+            // 1. خيارات متعددة
+            { type: "ثقافة عامة 🧠", q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟", options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"], correct: 1 },
+            
+            // 2. إكمال كلمات أغنية / لحن
+            { type: "تخمين كلمات أغنية 🎤", q: "أكمل الكلمات التالية: 'ما زال ما زال...'", mode: "text", correctText: "عشقي ليك ما زال" },
+            
+            // 3. ترتيب / فك تشفير الكلمة
+            { type: "فك تشفير الكلمة 🧩", q: "رتب الحروف التالية لتكون اسم دولة عربية: ( ر - ا - ز - ج - ا - ئ )", mode: "text", correctText: "الجزائر" },
+
+            // 4. لحن نغمات (صوتي)
+            { type: "تخمين اللحن 🎵", q: "استمع للحن واكتب اسم الأغنية / الكرتون!", mode: "audioText", melody: [261, 293, 329, 349, 392], correctText: "سبيستون" },
+
+            // 5. أسئلة سريعة
+            { type: "سؤال سريع ⚡", q: "شيء كلما أخذت منه كبر؟", options: ["الحفرة", "العمر", "المال", "العلم"], correct: 0 }
         ];
 
         let client = null;
-        let myId = Math.random().toString(36).substring(7); // معرف فريد للجهاز
+        let myId = Math.random().toString(36).substring(7);
         let roomTopic = "";
         let myName = "";
-        let otherName = "المنافس";
-        let myScore = 0;
-        let otherScore = 0;
-        let currentQuestion = null;
-        let isMyTurn = false;
+        let players = {};
+        let currentEvent = null;
+        let hasAnsweredCurrent = false;
+        let scoreMultiplier = 1;
 
         function saveName() {
             myName = document.getElementById('username').value.trim();
             if(!myName) return alert("يرجى كتابة اسمك أولاً!");
-
             document.getElementById('player-name-display').innerText = myName;
             showScreen('room-screen');
         }
 
         function joinGameRoom() {
             const code = document.getElementById('room-code').value.trim();
-            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
+            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام!");
 
-            document.getElementById('status-msg').innerText = "جاري الاتصال بالسيرفر السريع...";
-            roomTopic = "ayoub_quiz_room_" + code;
+            document.getElementById('status-msg').innerText = "جاري الاتصال بالنظام الجماعي...";
+            roomTopic = "ayoub_cocktail_room_" + code;
 
-            // استخدام سيرفر WebSocket مجاني وسريع جداً مخصص للألعاب
             client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
             client.on('connect', () => {
-                document.getElementById('status-msg').innerText = "تم الاتصال! في انتظار المنافس...";
                 client.subscribe(roomTopic);
-                
                 showScreen('game-screen');
+
+                players[myId] = { name: myName, score: 0 };
                 updateUI();
 
-                // الترحيب والمزامنة مع المنافس
-                broadcastData({ type: 'join', senderId: myId, name: myName });
+                broadcastData({ type: 'join', senderId: myId, name: myName, score: 0 });
             });
 
             client.on('message', (topic, message) => {
                 const data = JSON.parse(message.toString());
-                if(data.senderId !== myId) {
-                    handleData(data);
-                }
+                if(data.senderId !== myId) handleData(data);
             });
         }
 
         function broadcastData(data) {
             data.senderId = myId;
-            if(client) {
-                client.publish(roomTopic, JSON.stringify(data));
-            }
+            if(client) client.publish(roomTopic, JSON.stringify(data));
         }
 
         function handleData(data) {
             if(data.type === 'join') {
-                otherName = data.name;
+                players[data.senderId] = { name: data.name, score: data.score };
                 updateUI();
-                document.getElementById('turn-display').innerText = `تم اتصال ${otherName}! اسحب السؤال للبدء 🎉`;
-                // نرد عليه باسمنا باش يعرفنا
-                broadcastData({ type: 'welcome-back', name: myName });
-            } else if(data.type === 'welcome-back') {
-                otherName = data.name;
+                appendChatMessage("النظام", `انضم ${data.name} للفعاليات! 🎉`, 'other');
+                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score });
+            } 
+            else if(data.type === 'sync-player') {
+                players[data.senderId] = { name: data.name, score: data.score };
                 updateUI();
-                document.getElementById('turn-display').innerText = `جاهز للعب مع ${otherName}! 🎉`;
-            } else if(data.type === 'roll') {
-                displayQuestion(data.turnIsP1, data.qIndex);
-            } else if(data.type === 'answer-result') {
-                otherScore = data.newScore;
-                updateUI();
-                showFeedback(data.msg, data.isCorrect);
-            } else if(data.type === 'chat') {
-                appendChatMessage(otherName, data.text, 'other');
+            }
+            else if(data.type === 'roll') {
+                displayEvent(data.eIndex, data.starterName);
+            } 
+            else if(data.type === 'score-update') {
+                if(players[data.senderId]) {
+                    players[data.senderId].score = data.newScore;
+                    updateUI();
+                }
+            } 
+            else if(data.type === 'chat') {
+                appendChatMessage(data.senderName, data.text, 'other');
             }
         }
 
         function rollTurn() {
-            const isMe = Math.random() < 0.5;
-            const qIndex = Math.floor(Math.random() * quizData.length);
-
-            displayQuestion(isMe, qIndex);
-
-            broadcastData({
-                type: 'roll',
-                turnIsP1: !isMe,
-                qIndex: qIndex
-            });
+            const eIndex = Math.floor(Math.random() * eventsData.length);
+            displayEvent(eIndex, myName);
+            broadcastData({ type: 'roll', eIndex: eIndex, starterName: myName });
         }
 
-        function displayQuestion(isItMe, qIndex) {
-            isMyTurn = isItMe;
-            currentQuestion = quizData[qIndex];
-            
-            document.getElementById('turn-display').innerText = isItMe ? `🎲 الدور عليك يا: ${myName}!` : `🎲 الدور على: ${otherName}`;
-            document.getElementById('question-text').innerText = currentQuestion.q;
+        function displayEvent(eIndex, starterName) {
+            currentEvent = eventsData[eIndex];
+            hasAnsweredCurrent = false;
+
+            document.getElementById('turn-display').innerText = `🎲 الفعالية سحبها: ${starterName}!`;
+            document.getElementById('activity-card').style.display = 'block';
+            document.getElementById('q-badge').innerText = currentEvent.type;
+            document.getElementById('question-text').innerText = currentEvent.q;
             document.getElementById('feedback-text').innerText = "";
 
-            const optButtons = document.querySelectorAll('.opt-btn');
-            const optionsGrid = document.getElementById('options-container');
-            
-            optionsGrid.style.display = 'grid';
+            const optGrid = document.getElementById('options-container');
+            const textGroup = document.getElementById('text-input-container');
+            const audioBtn = document.getElementById('audio-play-btn');
 
-            currentQuestion.options.forEach((opt, idx) => {
-                optButtons[idx].innerText = opt;
-                optButtons[idx].disabled = !isItMe;
-            });
+            optGrid.style.display = 'none';
+            textGroup.style.display = 'none';
+            audioBtn.style.display = 'none';
+
+            if(currentEvent.mode === 'text' || currentEvent.mode === 'audioText') {
+                textGroup.style.display = 'flex';
+                document.getElementById('text-answer-input').value = '';
+                if(currentEvent.mode === 'audioText') audioBtn.style.display = 'block';
+            } else {
+                optGrid.style.display = 'grid';
+                const optButtons = document.querySelectorAll('.opt-btn');
+                currentEvent.options.forEach((opt, idx) => {
+                    optButtons[idx].innerText = opt;
+                    optButtons[idx].disabled = false;
+                    optButtons[idx].style.display = 'block';
+                });
+            }
 
             document.getElementById('roll-btn').style.display = 'none';
         }
 
         function checkAnswer(selectedIndex) {
-            if(!isMyTurn) return;
+            if(hasAnsweredCurrent) return;
+            hasAnsweredCurrent = true;
 
-            const isCorrect = (selectedIndex === currentQuestion.correct);
-            
+            const isCorrect = (selectedIndex === currentEvent.correct);
+            processResult(isCorrect, currentEvent.options[currentEvent.correct]);
+        }
+
+        function checkTextAnswer() {
+            if(hasAnsweredCurrent) return;
+            const userAns = document.getElementById('text-answer-input').value.trim();
+            if(!userAns) return;
+
+            hasAnsweredCurrent = true;
+            const isCorrect = userAns.toLowerCase() === currentEvent.correctText.toLowerCase();
+            processResult(isCorrect, currentEvent.correctText);
+        }
+
+        function processResult(isCorrect, correctAnsText) {
             if(isCorrect) {
-                myScore += 1;
-                showFeedback("إجابة صحيحة! 🎉 (+1 نقطة)", true);
+                const pointsGained = 1 * scoreMultiplier;
+                players[myId].score += pointsGained;
+                showFeedback(`إجابة صحيحة ممتاز! 🎉 (+${pointsGained} نقاط)`, true);
             } else {
-                myScore -= 1;
-                showFeedback(`إجابة خاطئة! ❌ (-1 نقطة) - الصحيحة: ${currentQuestion.options[currentQuestion.correct]}`, false);
+                players[myId].score = Math.max(0, players[myId].score - 1);
+                showFeedback(`إجابة خاطئة! ❌ الإجابة هي: (${correctAnsText})`, false);
             }
 
+            scoreMultiplier = 1; // إعادة تعيين المضاعف
             updateUI();
 
             document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
             document.getElementById('roll-btn').style.display = 'block';
 
-            broadcastData({
-                type: 'answer-result',
-                newScore: myScore,
-                isCorrect: isCorrect,
-                msg: isCorrect ? `جاوب ${myName} إجابة صحيحة! ✅` : `غلط ${myName} في الإجابة! ❌`
+            broadcastData({ type: 'score-update', newScore: players[myId].score });
+        }
+
+        // تشغيل النغمات الموسيقية
+        function playMelody() {
+            if(!currentEvent.melody) return;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            currentEvent.melody.forEach((freq, idx) => {
+                setTimeout(() => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.freq.value = freq;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
+                }, idx * 300);
             });
+        }
+
+        // المتجر
+        function toggleShop(open) {
+            document.getElementById('shop-modal').style.display = open ? 'flex' : 'none';
+        }
+
+        function buyItem(item, cost) {
+            if(players[myId].score < cost) return alert("ليس لديك نقاط كافية!");
+            
+            players[myId].score -= cost;
+            if(item === '5050' && currentEvent && currentEvent.options) {
+                let removed = 0;
+                const buttons = document.querySelectorAll('.opt-btn');
+                buttons.forEach((btn, idx) => {
+                    if(idx !== currentEvent.correct && removed < 2) {
+                        btn.style.display = 'none';
+                        removed++;
+                    }
+                });
+                alert("تم حذف إجابتين خاطئتين!");
+            } else if(item === 'double') {
+                scoreMultiplier = 2;
+                alert("تم تفعيل مضاعف النقاط للفعالية القادمة! (x2)");
+            }
+            updateUI();
+            toggleShop(false);
+            broadcastData({ type: 'score-update', newScore: players[myId].score });
+        }
+
+        /* --- الشات الجانبي --- */
+        function toggleChat() {
+            document.getElementById('side-chat').classList.toggle('open');
         }
 
         function sendChatMessage() {
@@ -382,18 +556,11 @@
             if(!text) return;
 
             appendChatMessage('أنت', text, 'me');
-
-            broadcastData({
-                type: 'chat',
-                text: text
-            });
-
+            broadcastData({ type: 'chat', senderName: myName, text: text });
             input.value = '';
         }
 
-        function handleChatKey(e) {
-            if(e.key === 'Enter') sendChatMessage();
-        }
+        function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
 
         function appendChatMessage(sender, text, type) {
             const box = document.getElementById('chat-box');
@@ -411,10 +578,20 @@
         }
 
         function updateUI() {
-            document.getElementById('p1-title').innerText = `${myName} (أنت)`;
-            document.getElementById('p2-title').innerText = otherName;
-            document.getElementById('p1-score').innerText = myScore;
-            document.getElementById('p2-score').innerText = otherScore;
+            document.getElementById('my-score-display').innerText = players[myId] ? players[myId].score : 0;
+            const box = document.getElementById('leaderboard');
+            box.innerHTML = '';
+
+            const sorted = Object.keys(players)
+                .map(id => ({ id, ...players[id] }))
+                .sort((a, b) => b.score - a.score);
+
+            sorted.forEach(p => {
+                const row = document.createElement('div');
+                row.className = `player-row ${p.id === myId ? 'me' : ''}`;
+                row.innerHTML = `<span><b>${p.name}</b> ${p.id === myId ? '(أنت)' : ''}</span> <span><b>${p.score}</b> نقطة</span>`;
+                box.appendChild(row);
+            });
         }
 
         function showScreen(id) {
