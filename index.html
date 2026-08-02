@@ -1,45 +1,14 @@
-
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <title>كوكتال علي - هضرة وأغاني</title>
     <style>
-        :root {
-            --bg-glass: rgba(15, 5, 12, 0.75);
-            --card-border: rgba(255, 30, 80, 0.35);
-            --primary: #e60039;
-            --primary-glow: #ff1a53;
-            --accent: #ff3366;
-            --success: #00e676;
-            --danger: #ff1744;
-            --text-color: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            direction: rtl;
-            overflow-x: hidden;
-            position: relative;
-            background-color: #000;
-        }
-
-        /* --- خلفية الفيديو --- */
         #bg-video {
             position: fixed;
             top: 50%;
             left: 50%;
-            min-width: 100%;
-            min-height: 100%;
             width: 70%;
             height: auto;
             transform: translate(-50%, -50%);
@@ -48,628 +17,205 @@
             filter: brightness(0.6) contrast(1.1);
         }
 
-        /* غطاء مظلم فوق الفيديو لزيادة وضوح النص */
-        .video-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.85) 100%);
-            z-index: -1;
-        }
-
-        .container {
-            background: var(--bg-glass);
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 20px;
-            padding: 22px;
-            width: 100%;
-            max-width: 550px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(230, 0, 57, 0.25), 0 0 20px rgba(0, 0, 0, 0.8);
-            position: relative;
-        }
-
-        h1 {
-            color: #ff4d79;
-            font-size: 22px;
-            margin-bottom: 12px;
-            text-shadow: 0 0 10px rgba(255, 77, 121, 0.6);
-        }
-
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin: 6px 0;
-            border-radius: 25px;
-            border: none;
-            font-size: 15px;
-            box-sizing: border-box;
-        }
-
-        input {
-            background: rgba(10, 2, 6, 0.7);
-            color: white;
-            border: 1px solid var(--primary);
-            text-align: center;
-            outline: none;
-            box-shadow: inset 0 0 8px rgba(230, 0, 57, 0.3);
-        }
-
-        input:focus {
-            border-color: #ff668c;
-            box-shadow: 0 0 12px rgba(255, 102, 140, 0.6);
-        }
-
-        button {
-            background: linear-gradient(45deg, var(--primary), #b3002d);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s ease;
-            box-shadow: 0 4px 15px rgba(230, 0, 57, 0.4);
-        }
-
-        button:hover {
-            box-shadow: 0 0 20px rgba(255, 26, 83, 0.8);
-        }
-
-        button:active { transform: scale(0.98); }
-
-        .screen { display: none; }
-        .active { display: block; }
-
-        /* الأزرار العائمة */
-        .bottom-floating-btns {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 99;
-        }
-
-        .icon-btn {
-            width: 50px !important;
-            height: 50px !important;
-            border-radius: 50% !important;
-            padding: 0 !important;
-            margin: 0 !important;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
-            box-shadow: 0 4px 20px rgba(230, 0, 57, 0.5);
-            background: linear-gradient(45deg, #e60039, #800020);
-            border: 1px solid rgba(255,255,255,0.2);
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .icon-btn.mic-off { background: #1f1f2e; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .icon-btn.mic-on { background: var(--success); box-shadow: 0 0 18px var(--success); }
-
-        .leaderboard-box {
-            background: rgba(10, 2, 6, 0.5);
-            border: 1px solid var(--card-border);
+        .chat-container {
+            width: 420px;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 12px;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-
-        .player-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 12px;
-            margin: 4px 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .player-row.me {
-            border: 1px solid var(--accent);
-            background: rgba(255, 51, 102, 0.25);
-            box-shadow: 0 0 10px rgba(255, 51, 102, 0.3);
-        }
-
-        .q-type-badge {
-            display: inline-block;
-            padding: 4px 14px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--primary-glow);
-            margin-bottom: 8px;
-        }
-
-        /* --- بطاقة الأسئلة المتناسقة مع العين الحمراء --- */
-        .q-box {
-            background: rgba(20, 3, 10, 0.85);
-            border-right: 4px solid var(--primary-glow);
-            border-left: 1px solid rgba(255, 26, 83, 0.2);
-            border-top: 1px solid rgba(255, 26, 83, 0.2);
-            border-bottom: 1px solid rgba(255, 26, 83, 0.2);
-            padding: 16px;
-            border-radius: 12px;
-            margin: 12px 0;
-            font-size: 16px;
-            font-weight: bold;
-            line-height: 1.5;
-            box-shadow: inset 0 0 15px rgba(230, 0, 57, 0.2), 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .opt-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 10px;
-            color: white;
-            font-size: 14px;
-        }
-
-        .opt-btn:hover {
-            background: rgba(230, 0, 57, 0.3);
-            border-color: var(--primary-glow);
-        }
-
-        .text-answer-group {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        audio {
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 10px;
-        }
-
-        .side-chat {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 300px;
-            height: 100%;
-            background: rgba(10, 2, 6, 0.95);
-            border-right: 1px solid var(--primary);
-            transition: left 0.3s ease;
-            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
-            padding: 15px;
-            box-sizing: border-box;
-            box-shadow: 5px 0 25px rgba(230, 0, 57, 0.3);
+            overflow: hidden;
+            z-index: 1;
         }
 
-        .side-chat.open { left: 0; }
-
         .chat-header {
+            background: #1f1f1f;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #333;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
         }
 
-        .chat-box {
+        .timer {
+            font-size: 14px;
+            color: #ffc107;
+            background: #333;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .chat-messages {
             flex: 1;
+            padding: 15px;
             overflow-y: auto;
-            margin: 10px 0;
+            max-height: 280px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            text-align: right;
+            gap: 10px;
         }
 
-        .chat-msg {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            word-break: break-word;
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 85%;
+            word-wrap: break-word;
         }
 
-        .chat-msg.me { background: var(--primary); align-self: flex-start; }
-        .chat-msg.other { background: rgba(255, 51, 102, 0.3); align-self: flex-end; }
+        .person1 {
+            background: #0056b3;
+            align-self: flex-start;
+        }
+
+        .person2 {
+            background: #28a745;
+            align-self: flex-end;
+        }
+
+        .audio-snippet {
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: #1f1f1f;
+            border-top: 1px solid #333;
+            gap: 5px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            outline: none;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        button {
+            padding: 10px 12px;
+            border: none;
+            background: #ffc107;
+            color: #000;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #e0a800;
+        }
     </style>
 </head>
 <body>
 
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="video.mp4" type="video/mp4">
+    <video autoplay muted loop id="bg-video">
+        <source src="YOUR_VIDEO_LINK.mp4" type="video/mp4">
+        متصفحك لا يدعم عرض الفيديو.
     </video>
-    <div class="video-overlay"></div>
 
-    <div class="bottom-floating-btns" id="game-controls" style="display:none;">
-        <button id="mic-btn" class="icon-btn mic-off" onclick="toggleMic()" title="المايك">🎙️</button>
-        <button class="icon-btn" onclick="toggleChat()" title="الشات">💬</button>
-    </div>
-
-    <div class="side-chat" id="side-chat">
+    <div class="chat-container">
         <div class="chat-header">
-            <h4 style="margin:0; color:#ff4d79;">دردشة الغرفة 💬</h4>
-            <button onclick="toggleChat()" style="width:auto; padding:3px 10px; margin:0; background:var(--danger);">✕</button>
+            <span id="turnIndicator">دور: الطرف الأول</span>
+            <span class="timer" id="timerDisplay">20s</span>
         </div>
-        <div class="chat-box" id="chat-box"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
-            <button onclick="sendChatMessage()" style="width:auto; padding:8px 15px; margin:0;">إرسال</button>
-        </div>
-    </div>
-
-    <div class="container">
-        <h1>🎲 كوكتيل الفعاليات الجماعية 🎤</h1>
-
-        <div id="login-screen" class="screen active">
-            <input type="text" id="username" placeholder="اكتب اسمك هنا..." maxlength="15">
-            <button onclick="saveName()">التالي 🚀</button>
-        </div>
-
-        <div id="room-screen" class="screen">
-            <h3>مرحباً <span id="player-name-display" style="color:#ff809f;"></span>!</h3>
-            <input type="number" id="room-code" placeholder="كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
-            <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
-            <p id="status-msg" style="color:#ff809f; font-size:14px; margin-top:10px;"></p>
-        </div>
-
-        <div id="game-screen" class="screen">
-            <div class="leaderboard-box" id="leaderboard"></div>
-
-            <button id="roll-btn" onclick="rollTurn()">🎲 سحب دور وسؤال جديد!</button>
-
-            <div id="turn-display" style="font-size:15px; font-weight:bold; color:#ff4d79; margin:10px 0;">في انتظار بداية السحب...</div>
-
-            <div id="activity-card" style="display:none;">
-                <span class="q-type-badge" id="q-badge">فعالية</span>
-                <div class="q-box" id="question-text"></div>
-
-                <div id="audio-player-box" style="display:none;">
-                    <audio id="song-audio" controls></audio>
-                </div>
-
-                <div class="options-grid" id="options-container" style="display:none;">
-                    <button class="opt-btn" onclick="checkAnswer(0)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(1)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(2)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(3)"></button>
-                </div>
-
-                <div class="text-answer-group" id="text-input-container" style="display:none;">
-                    <input type="text" id="text-answer-input" placeholder="اكتب اسم الأغنية أو الإجابة..." maxlength="50">
-                    <button onclick="checkTextAnswer()" style="width:auto; padding:8px 20px;">تأكيد 🎯</button>
-                </div>
-            </div>
-
-            <div id="feedback-text" style="font-size:15px; font-weight:bold; margin:8px 0; min-height:20px;"></div>
+        
+        <div class="chat-messages" id="messageBox"></div>
+        
+        <div class="chat-input-area">
+            <input type="text5" id="userInput" placeholder="اكتب هضرة أو مقطع قصير...">
+            <button onclick="sendMessage()">إرسال</button>
+            <button onclick="skipTurn()" style="background: #dc3545; color: #fff;" title="إذا غلطت أو حبست، دوز للآخر">تخطى / غلط</button>
         </div>
     </div>
-
-    <div id="audio-container"></div>
 
     <script>
-        function sanitize(str) {
-            if (typeof str !== 'string') return '';
-            return str.replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
+        let currentTurn = 1;
+        let timeLeft = 20;
+        let countdown;
+
+        function startTimer() {
+            clearInterval(countdown);
+            timeLeft = 20;
+            document.getElementById('timerDisplay').innerText = timeLeft + "s";
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timerDisplay').innerText = timeLeft + "s";
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    // إلا فوت الوقت وماجاوبش، يتقلب الدور وحدو باش ما يبقاش حاصل
+                    switchTurn();
+                    alert("فوتك الوقت! تم تحويل الدور للطرف الآخر تلقائياً.");
+                }
+            }, 1000);
         }
 
-        const initialEventsData = [
-            // أسئلة الحب والعلاقات
-            { id: 1, type: "أسئلة الحب ❤️", q: "من هي حب ناروتو الأول والأبدي التي تزوجها؟", options: ["إينو", "هيناتا", "كوشينا", "أكاني"], correct: 1 },
-            { id: 2, type: "أسئلة الحب ❤️", q: "من هي زوجة ميناتو وأم ناروتو ذات الشعر الأحمر؟", options: ["كوشينا", "إينو", "أكاني", "تسونادي"], correct: 0 },
-            { id: 3, type: "أسئلة الحب ❤️", q: "من هو العضو المقرب والرفيق لـ ساسوري في الأكاتسكي (ديفو/ديدارا)؟", options: ["وسيم", "ديدارا", "حسين", "مادارا"], correct: 1 },
-            { id: 4, type: "أسئلة الحب ❤️", q: "من هو المدمور بحب تسونادي وكان يكتب الروايات؟", options: ["جيرايا", "دانكوتو", "حسين", "وسيم"], correct: 0 },
-            { id: 5, type: "أسئلة الحب ❤️", q: "من هي الشخصية التي تحب أكاني في التحديات؟", options: ["وسيم", "دانكوتو", "حسين", "ساسوري"], correct: 1 },
-            { id: 6, type: "أسئلة الحب ❤️", q: "مين اللي دايماً يطقطقوا عليه ويقولوا وسيم الغرام؟", options: ["وسيم", "حسين", "ساسوري", "دانكوتو"], correct: 0 },
-            { id: 7, type: "أسئلة الحب ❤️", q: "حسين في التحديات مين تحب شخصيته من البنات؟", options: ["إينو", "أكاني", "كوشينا", "ساكورا"], correct: 1 },
-
-            // أغاني مسموعة
-            { id: 8, type: "تخمين الأغنية المسموعة 🎧", q: "استمع للمقطع الصوتي واكتب اسم الأغنية أو الكرتون:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", mode: "text", correctText: "سبيستون" },
-            { id: 9, type: "تخمين الأغنية المسموعة 🎧", q: "استمع للمقطع الصوتي واعرف الأغنية:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", mode: "text", correctText: "أابطال الديجيتال" },
-            { id: 10, type: "تخمين الأغنية المسموعة 🎧", q: "اسمع المقطع واسحب الاسم الصحيح للأغنية:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", mode: "text", correctText: "أنا وأخي" }
-        ];
-
-        let availableEvents = [...initialEventsData];
-        let client = null;
-        let peer = null;
-        let myId = Math.random().toString(36).substring(7);
-        let roomTopic = "";
-        let myName = "";
-        let players = {};
-        let currentEvent = null;
-        let hasAnsweredCurrent = false;
-
-        let localAudioStream = null;
-        let isMicOn = false;
-
-        function saveName() {
-            const rawName = document.getElementById('username').value.trim();
-            myName = sanitize(rawName);
-            if(!myName) return alert("يرجى كتابة اسم صحيح!");
-            document.getElementById('player-name-display').innerText = myName;
-            showScreen('room-screen');
+        function switchTurn() {
+            if (currentTurn === 1) {
+                currentTurn = 2;
+                document.getElementById('turnIndicator').innerText = "دور: الطرف الثاني";
+            } else {
+                currentTurn = 1;
+                document.getElementById('turnIndicator').innerText = "دور: الطرف الأول";
+            }
+            startTimer();
         }
 
-        function joinGameRoom() {
-            const code = document.getElementById('room-code').value.trim();
-            if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
-
-            document.getElementById('status-msg').innerText = "جاري الاتصال...";
-            roomTopic = "ayoub_discord_room_" + code;
-
-            peer = new Peer(myId + "_" + code);
-
-            peer.on('open', () => {
-                client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-
-                client.on('connect', () => {
-                    client.subscribe(roomTopic);
-                    showScreen('game-screen');
-                    document.getElementById('game-controls').style.display = 'flex';
-
-                    players[myId] = { name: myName, score: 0, peerId: peer.id };
-                    updateUI();
-
-                    broadcastData({ type: 'join', senderId: myId, name: myName, score: 0, peerId: peer.id });
-                });
-
-                client.on('message', (topic, message) => {
-                    try {
-                        const data = JSON.parse(message.toString());
-                        if(data.senderId !== myId) handleData(data);
-                    } catch(e) {}
-                });
-            });
-
-            peer.on('call', (call) => {
-                call.answer(localAudioStream);
-                call.on('stream', (remoteStream) => {
-                    addAudioStream(call.peer, remoteStream);
-                });
-            });
+        function skipTurn() {
+            switchTurn();
         }
 
-        function broadcastData(data) {
-            data.senderId = myId;
-            if(client) client.publish(roomTopic, JSON.stringify(data));
-        }
-
-        function handleData(data) {
-            const safeName = sanitize(data.name || data.senderName || '');
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const messageBox = document.getElementById('messageBox');
             
-            if(data.type === 'join') {
-                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
-                updateUI();
-                appendChatMessage("النظام", `انضم ${safeName} للغرفة! 🎉`, 'other');
-                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score, peerId: peer.id });
-                
-                if(isMicOn && localAudioStream && data.peerId) {
-                    callPeer(data.peerId);
-                }
-            } 
-            else if(data.type === 'sync-player') {
-                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
-                updateUI();
-            }
-            else if(data.type === 'roll') {
-                displayEvent(data.chosenEvent, data.chosenPlayerName);
-            } 
-            else if(data.type === 'score-update') {
-                if(players[data.senderId]) {
-                    players[data.senderId].score = data.newScore;
-                    updateUI();
-                }
-            } 
-            else if(data.type === 'chat') {
-                appendChatMessage(safeName, sanitize(data.text), 'other');
-            }
-        }
+            if (input.value.trim() === "") return;
 
-        function rollTurn() {
-            if (availableEvents.length === 0) {
-                alert("انتهت جميع الأسئلة! سيتم إعادة تعيين بنك الأسئلة.");
-                availableEvents = [...initialEventsData];
-            }
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
 
-            const playerKeys = Object.keys(players);
-            const randomPlayerId = playerKeys[Math.floor(Math.random() * playerKeys.length)];
-            const chosenPlayerName = players[randomPlayerId].name;
-
-            const qIndex = Math.floor(Math.random() * availableEvents.length);
-            const chosenEvent = availableEvents.splice(qIndex, 1)[0];
-
-            displayEvent(chosenEvent, chosenPlayerName);
-            broadcastData({ type: 'roll', chosenEvent: chosenEvent, chosenPlayerName: chosenPlayerName });
-        }
-
-        function displayEvent(event, chosenPlayerName) {
-            currentEvent = event;
-            hasAnsweredCurrent = false;
-
-            document.getElementById('turn-display').innerText = `🎯 الدور على: ${chosenPlayerName}`;
-            document.getElementById('activity-card').style.display = 'block';
-            document.getElementById('q-badge').innerText = currentEvent.type;
-            document.getElementById('question-text').innerText = currentEvent.q;
-            document.getElementById('feedback-text').innerText = "";
-
-            const audioBox = document.getElementById('audio-player-box');
-            const songAudio = document.getElementById('song-audio');
-            const optGrid = document.getElementById('options-container');
-            const textGroup = document.getElementById('text-input-container');
-
-            if(currentEvent.audioUrl) {
-                audioBox.style.display = 'block';
-                songAudio.src = currentEvent.audioUrl;
-                songAudio.play().catch(()=>{});
+            if (currentTurn === 1) {
+                messageDiv.classList.add('person1');
+                messageDiv.innerHTML = `<strong>الطرف الأول:</strong> ${input.value}`;
+                currentTurn = 2;
+                document.getElementById('turnIndicator').innerText = "دور: الطرف الثاني";
             } else {
-                audioBox.style.display = 'none';
-                songAudio.pause();
+                messageDiv.classList.add('person2');
+                messageDiv.innerHTML = `<strong>الطرف الثاني:</strong> ${input.value}`;
+                currentTurn = 1;
+                document.getElementById('turnIndicator').innerText = "دور: الطرف الأول";
             }
 
-            optGrid.style.display = 'none';
-            textGroup.style.display = 'none';
-
-            if(currentEvent.mode === 'text') {
-                textGroup.style.display = 'flex';
-                document.getElementById('text-answer-input').value = '';
-            } else {
-                optGrid.style.display = 'grid';
-                const optButtons = document.querySelectorAll('.opt-btn');
-                currentEvent.options.forEach((opt, idx) => {
-                    optButtons[idx].innerText = opt;
-                    optButtons[idx].disabled = false;
-                });
-            }
-
-            document.getElementById('roll-btn').style.display = 'none';
+            messageBox.appendChild(messageDiv);
+            input.value = "";
+            messageBox.scrollTop = messageBox.scrollHeight;
+            startTimer(); // إعادة ضبط الوقت للدور الجديد
         }
 
-        function checkAnswer(selectedIndex) {
-            if(hasAnsweredCurrent) return;
-            hasAnsweredCurrent = true;
-
-            const isCorrect = (selectedIndex === currentEvent.correct);
-            processResult(isCorrect, currentEvent.options[currentEvent.correct]);
-        }
-
-        function checkTextAnswer() {
-            if(hasAnsweredCurrent) return;
-            const userAns = sanitize(document.getElementById('text-answer-input').value.trim());
-            if(!userAns) return;
-
-            hasAnsweredCurrent = true;
-            const isCorrect = userAns.toLowerCase() === currentEvent.correctText.toLowerCase();
-            processResult(isCorrect, currentEvent.correctText);
-        }
-
-        function processResult(isCorrect, correctAnsText) {
-            if(isCorrect) {
-                players[myId].score += 1;
-                showFeedback(`إجابة صحيحة ممتاز! 🎉 (+1 نقطة)`, true);
-            } else {
-                players[myId].score = Math.max(0, players[myId].score - 1);
-                showFeedback(`خاطئة! ❌ الإجابة الصحيحة: (${correctAnsText})`, false);
-            }
-
-            updateUI();
-            document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
-            document.getElementById('roll-btn').style.display = 'block';
-
-            broadcastData({ type: 'score-update', newScore: players[myId].score });
-        }
-
-        async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-
-            if (!isMicOn) {
-                try {
-                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    isMicOn = true;
-                    btn.classList.remove('mic-off');
-                    btn.classList.add('mic-on');
-
-                    Object.values(players).forEach(p => {
-                        if(p.peerId && p.peerId !== peer.id) {
-                            callPeer(p.peerId);
-                        }
-                    });
-
-                } catch (err) {
-                    alert("يرجى إعطاء صلاحية استخدام المايك!");
-                }
-            } else {
-                if (localAudioStream) {
-                    localAudioStream.getAudioTracks().forEach(track => track.enabled = false);
-                }
-                isMicOn = false;
-                btn.classList.remove('mic-on');
-                btn.classList.add('mic-off');
-            }
-        }
-
-        function callPeer(peerId) {
-            if(!localAudioStream) return;
-            const call = peer.call(peerId, localAudioStream);
-            call.on('stream', (remoteStream) => {
-                addAudioStream(peerId, remoteStream);
-            });
-        }
-
-        function addAudioStream(id, stream) {
-            let audio = document.getElementById("audio_" + id);
-            if (!audio) {
-                audio = document.createElement('audio');
-                audio.id = "audio_" + id;
-                audio.autoplay = true;
-                document.getElementById('audio-container').appendChild(audio);
-            }
-            audio.srcObject = stream;
-        }
-
-        function toggleChat() {
-            document.getElementById('side-chat').classList.toggle('open');
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const text = sanitize(input.value.trim());
-            if(!text) return;
-
-            appendChatMessage('أنت', text, 'me');
-            broadcastData({ type: 'chat', senderName: myName, text: text });
-            input.value = '';
-        }
-
-        function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
-
-        function appendChatMessage(sender, text, type) {
-            const box = document.getElementById('chat-box');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-msg ${type}`;
-            msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function showFeedback(text, isCorrect) {
-            const fb = document.getElementById('feedback-text');
-            fb.innerText = text;
-            fb.style.color = isCorrect ? 'var(--success)' : 'var(--danger)';
-        }
-
-        function updateUI() {
-            const box = document.getElementById('leaderboard');
-            box.innerHTML = '';
-
-            const sorted = Object.keys(players)
-                .map(id => ({ id, ...players[id] }))
-                .sort((a, b) => b.score - a.score);
-
-            sorted.forEach(p => {
-                const row = document.createElement('div');
-                row.className = `player-row ${p.id === myId ? 'me' : ''}`;
-                row.innerHTML = `<span><b>${p.name}</b> ${p.id === myId ? '(أنت)' : ''}</span> <span><b>${p.score}</b> نقطة</span>`;
-                box.appendChild(row);
-            });
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
+        // نبدأ المؤقت مع بداية الصفحة
+        startTimer();
     </script>
+
 </body>
 </html>
