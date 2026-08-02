@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
-    <!-- مكتبة WebSocket MQTT -->
+    <!-- مكتبات MQTT و PeerJS للصوت المباشر -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             --card-bg: rgba(30, 27, 75, 0.9);
@@ -16,7 +17,6 @@
             --warning: #fdcb6e;
         }
 
-        /* خلفية ديناميكية متحركة */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(-45deg, #0f0c20, #2d1b69, #1e1b4b, #130f40);
@@ -31,7 +31,6 @@
             padding: 15px;
             direction: rtl;
             overflow-x: hidden;
-            position: relative;
         }
 
         @keyframes gradientBG {
@@ -51,7 +50,6 @@
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             position: relative;
-            z-index: 10;
         }
 
         h1 { color: #00cec9; font-size: 22px; margin-bottom: 10px; }
@@ -86,23 +84,14 @@
         .screen { display: none; }
         .active { display: block; }
 
-        /* شريط المايك والتغييرات العلوي */
-        .controls-top {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
         .mic-btn {
             background: #2d3436;
-            flex: 1;
-            margin: 0;
+            margin-bottom: 10px;
         }
         .mic-btn.active-mic {
             background: var(--success);
         }
 
-        /* --- جدول المتصدرين --- */
         .leaderboard-box {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
@@ -128,7 +117,6 @@
             background: rgba(253, 121, 168, 0.2);
         }
 
-        /* --- بطاقات الفعاليات --- */
         .q-type-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -166,22 +154,12 @@
             font-size: 14px;
         }
 
-        .opt-btn:hover { background: var(--primary); }
-
         .text-answer-group {
             display: flex;
             gap: 5px;
             margin-top: 10px;
         }
 
-        .feedback-msg {
-            font-size: 15px;
-            font-weight: bold;
-            margin: 8px 0;
-            min-height: 20px;
-        }
-
-        /* --- الشات الجانبي --- */
         .chat-toggle-btn {
             position: fixed;
             bottom: 20px;
@@ -274,9 +252,7 @@
         </div>
 
         <div id="game-screen" class="screen">
-            <div class="controls-top">
-                <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️ المايك الجماعي: موقوف</button>
-            </div>
+            <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️ تشغيل المايك الجماعي</button>
 
             <div class="leaderboard-box" id="leaderboard"></div>
 
@@ -301,15 +277,14 @@
                 </div>
             </div>
 
-            <div class="feedback-msg" id="feedback-text"></div>
+            <div id="feedback-text" style="font-size:15px; font-weight:bold; margin:8px 0; min-height:20px;"></div>
         </div>
     </div>
 
-    <!-- الصوت المباشر (WebRTC Audio) -->
-    <audio id="remote-audio" autoplay></audio>
+    <!-- حاوية الأصوات المباشرة من باقي اللاعبين -->
+    <div id="audio-container"></div>
 
     <script>
-        // --- دالة حماية من الـ XSS (Sanitization) ---
         function sanitize(str) {
             if (typeof str !== 'string') return '';
             return str.replace(/[&<>"']/g, function(m) {
@@ -317,23 +292,18 @@
             });
         }
 
-        // --- بنك فعاليات الديسكورد والجمل المبعثرة ---
         const eventsData = [
-            // أسئلة ديسكورد وأعضاء
             { type: "تحدي الديسكورد 🤖", q: "ما هو البوت الخاص بإدارة الرتب والترحيب والشائعة استخدامه؟", options: ["ProBot", "Carl-bot", "Rythm", "Mee6"], correct: 0 },
             { type: "تحدي الديسكورد 👑", q: "ما هي الرتبة التي تملك كامل الصلاحيات في السيرفر؟", options: ["Moderator", "Administrator", "VIP", "Member"], correct: 1 },
             { type: "تحدي الديسكورد 💬", q: "ما هو الاختصار المستخدم لطرد عضو مؤقتاً بالديسكورد؟", options: ["/ban", "/timeout", "/kick", "/warn"], correct: 2 },
-            
-            // ترتيب جمل مبعثرة
             { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( السيرفر / في / أهلاً / بكم )", mode: "text", correctText: "أهلا بكم في السيرفر" },
             { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( التحدي / اليوم / ينطلق / أقوى )", mode: "text", correctText: "ينطلق أقوى التحدي اليوم" },
-
-            // جمل معكوسة (عكس الكلمات)
             { type: "فك الجملة المعكوسة 🔄", q: "اقرأ الجملة واكتبها بالشكل الصحيح: 'رباطسإ سركيسد'", mode: "text", correctText: "إسباطر ديسكورد" },
             { type: "فك الجملة المعكوسة 🔄", q: "اكتب الجملة بالترتيب الصحيح: 'ديكوا طاشن'", mode: "text", correctText: "نشاط أكيد" }
         ];
 
         let client = null;
+        let peer = null;
         let myId = Math.random().toString(36).substring(7);
         let roomTopic = "";
         let myName = "";
@@ -341,10 +311,8 @@
         let currentEvent = null;
         let hasAnsweredCurrent = false;
 
-        // متغيرات المايك الجماعي (WebRTC)
-        let localStream = null;
+        let localAudioStream = null;
         let isMicOn = false;
-        let lastMsgTime = 0; // حماية ضد الحرق والسبام
 
         function saveName() {
             const rawName = document.getElementById('username').value.trim();
@@ -358,35 +326,44 @@
             const code = document.getElementById('room-code').value.trim();
             if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
 
-            document.getElementById('status-msg').innerText = "جاري الاتصال...";
+            document.getElementById('status-msg').innerText = "جاري الاتصال بالنظام...";
             roomTopic = "ayoub_discord_room_" + code;
 
-            client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
+            // إعداد نظام الصوت (PeerJS)
+            peer = new Peer(myId + "_" + code);
 
-            client.on('connect', () => {
-                client.subscribe(roomTopic);
-                showScreen('game-screen');
+            peer.on('open', () => {
+                // الاتصال بـ MQTT
+                client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-                players[myId] = { name: myName, score: 0 };
-                updateUI();
+                client.on('connect', () => {
+                    client.subscribe(roomTopic);
+                    showScreen('game-screen');
 
-                broadcastData({ type: 'join', senderId: myId, name: myName, score: 0 });
+                    players[myId] = { name: myName, score: 0, peerId: peer.id };
+                    updateUI();
+
+                    broadcastData({ type: 'join', senderId: myId, name: myName, score: 0, peerId: peer.id });
+                });
+
+                client.on('message', (topic, message) => {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        if(data.senderId !== myId) handleData(data);
+                    } catch(e) {}
+                });
             });
 
-            client.on('message', (topic, message) => {
-                try {
-                    const data = JSON.parse(message.toString());
-                    if(data.senderId !== myId) handleData(data);
-                } catch(e) { console.error("Invalid Payload"); }
+            // استقبال المكالمات الصوتية من اللاعبين الآخرين
+            peer.on('call', (call) => {
+                call.answer(localAudioStream);
+                call.on('stream', (remoteStream) => {
+                    addAudioStream(call.peer, remoteStream);
+                });
             });
         }
 
         function broadcastData(data) {
-            // Anti-Spam protection
-            const now = Date.now();
-            if (now - lastMsgTime < 150 && data.type === 'chat') return; 
-            lastMsgTime = now;
-
             data.senderId = myId;
             if(client) client.publish(roomTopic, JSON.stringify(data));
         }
@@ -395,13 +372,18 @@
             const safeName = sanitize(data.name || data.senderName || '');
             
             if(data.type === 'join') {
-                players[data.senderId] = { name: safeName, score: data.score };
+                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
                 updateUI();
                 appendChatMessage("النظام", `انضم ${safeName} للغرفة! 🎉`, 'other');
-                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score });
+                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score, peerId: peer.id });
+                
+                // إذا كان المايك شغال اتصل بالعضو الجديد صوتياً
+                if(isMicOn && localAudioStream && data.peerId) {
+                    callPeer(data.peerId);
+                }
             } 
             else if(data.type === 'sync-player') {
-                players[data.senderId] = { name: safeName, score: data.score };
+                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
                 updateUI();
             }
             else if(data.type === 'roll') {
@@ -416,6 +398,58 @@
             else if(data.type === 'chat') {
                 appendChatMessage(safeName, sanitize(data.text), 'other');
             }
+        }
+
+        // --- نظام المايك المطور عبر PeerJS ---
+        async function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+
+            if (!isMicOn) {
+                try {
+                    // طلب إذن المايك من المتصفح
+                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    isMicOn = true;
+                    btn.classList.add('active-mic');
+                    btn.innerText = "🎙️ كتم المايك (شغال 🟢)";
+
+                    // الاتصال صوتياً بجميع اللاعبين المتواجدين في الغرفة
+                    Object.values(players).forEach(p => {
+                        if(p.peerId && p.peerId !== peer.id) {
+                            callPeer(p.peerId);
+                        }
+                    });
+
+                } catch (err) {
+                    alert("يرجى إعطاء صلاحية استخدام المايك في المتصفح ليشتغل الصوت!");
+                }
+            } else {
+                // إيقاف المايك
+                if (localAudioStream) {
+                    localAudioStream.getAudioTracks().forEach(track => track.enabled = false);
+                }
+                isMicOn = false;
+                btn.classList.remove('active-mic');
+                btn.innerText = "🎙️ تشغيل المايك الجماعي";
+            }
+        }
+
+        function callPeer(peerId) {
+            if(!localAudioStream) return;
+            const call = peer.call(peerId, localAudioStream);
+            call.on('stream', (remoteStream) => {
+                addAudioStream(peerId, remoteStream);
+            });
+        }
+
+        function addAudioStream(id, stream) {
+            let audio = document.getElementById("audio_" + id);
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = "audio_" + id;
+                audio.autoplay = true;
+                document.getElementById('audio-container').appendChild(audio);
+            }
+            audio.srcObject = stream;
         }
 
         function rollTurn() {
@@ -489,29 +523,6 @@
             broadcastData({ type: 'score-update', newScore: players[myId].score });
         }
 
-        // --- المايك الجماعي (Voice Chat) ---
-        async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-            if(!isMicOn) {
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    isMicOn = true;
-                    btn.classList.add('active-mic');
-                    btn.innerText = "🎙️ المايك الجماعي: شغال 🟢";
-                } catch(err) {
-                    alert("يرجى إعطاء صلاحية المايك في المتصفح!");
-                }
-            } else {
-                if(localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                }
-                isMicOn = false;
-                btn.classList.remove('active-mic');
-                btn.innerText = "🎙️ المايك الجماعي: موقوف 🔴";
-            }
-        }
-
-        // --- الشات الجانبي ---
         function toggleChat() {
             document.getElementById('side-chat').classList.toggle('open');
         }
