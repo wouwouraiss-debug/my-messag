@@ -175,13 +175,11 @@
     <div class="container">
         <h1>🎲 مسابقة الفعاليات + الشات 💬</h1>
 
-        <!-- شاشة تسجيل الاسم -->
         <div id="login-screen" class="screen active">
             <input type="text" id="username" placeholder="اكتب اسمك هنا...">
             <button onclick="saveName()">التالي 🚀</button>
         </div>
 
-        <!-- شاشة اختيار الغرفة برقم من 4 أرقام -->
         <div id="room-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
             <p style="font-size: 14px; color: #ccc;">اتفق مع صاحبك على كود من 4 أرقام (مثال: 1234)</p>
@@ -195,7 +193,6 @@
             <p id="status-msg" style="color:#a29bfe; font-size:14px; margin-top:10px;"></p>
         </div>
 
-        <!-- شاشة اللعب + الشات -->
         <div id="game-screen" class="screen">
             <div class="scoreboard">
                 <div class="p-card">
@@ -244,6 +241,19 @@
             { q: "شيء يملك أسناناً ولكنه لا يعض؟", options: ["المشط", "المنشار", "الزيبار", "القرش"], correct: 0 }
         ];
 
+        // إعدادات السيرفرات العالمية للربط البعيد عبر الولايات
+        const peerConfig = {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' },
+                    { urls: 'stun:stun4.l.google.com:19302' }
+                ]
+            }
+        };
+
         let peer = null;
         let conn = null;
         let myName = "";
@@ -253,7 +263,7 @@
         let currentQuestion = null;
         let isMyTurn = false;
 
-        const ROOM_PREFIX = "ayoub-quiz-room-"; // بادئة خاصة باش تعطينا اسم فريد
+        const ROOM_PREFIX = "ayoub-quiz-v2-room-";
 
         function saveName() {
             myName = document.getElementById('username').value.trim();
@@ -263,7 +273,6 @@
             showScreen('room-screen');
         }
 
-        // إنشاء غرفة بالكود (اللاعب الأول)
         function createRoom() {
             const code = document.getElementById('room-code').value.trim();
             if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
@@ -271,17 +280,19 @@
             document.getElementById('status-msg').innerText = "جاري إنشاء الغرفة وبانتظار المنافس...";
             
             const customPeerId = ROOM_PREFIX + code;
-            peer = new Peer(customPeerId);
+            peer = new Peer(customPeerId, peerConfig);
 
             peer.on('open', (id) => {
-                document.getElementById('status-msg').innerText = `تم إنشاء الغرفة رقم (${code})! قول لصاحبك يدخل برقم ${code}`;
+                document.getElementById('status-msg').innerText = `تم إنشاء الغرفة (${code})! قل لصاحبك يدخل برقم ${code}`;
             });
 
             peer.on('error', (err) => {
                 if(err.type === 'unavailable-id') {
-                    alert("هاد الكود مستعمل حالياً، جرب كود واحد آخر من 4 أرقام!");
-                    document.getElementById('status-msg').innerText = "";
+                    alert("هاد الكود مستعمل حالياً، جرب كود واحد آخر!");
+                } else {
+                    alert("حدث خطأ في الاتصال، جرب كود آخر.");
                 }
+                document.getElementById('status-msg').innerText = "";
             });
 
             peer.on('connection', (connection) => {
@@ -290,14 +301,13 @@
             });
         }
 
-        // الدخول لغرفة صاحبك (اللاعب الثاني)
         function joinRoom() {
             const code = document.getElementById('room-code').value.trim();
             if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
 
-            document.getElementById('status-msg').innerText = "جاري الدخول للغرفة...";
+            document.getElementById('status-msg').innerText = "جاري البحث عن الغرفة والاتصال...";
             
-            peer = new Peer(); // إنشاء معرف عشوائي للاعب الثاني
+            peer = new Peer(peerConfig);
 
             peer.on('open', () => {
                 const targetPeerId = ROOM_PREFIX + code;
@@ -306,7 +316,7 @@
             });
 
             peer.on('error', (err) => {
-                alert("ما قدرناش ندخلوا للغرفة، تأكد من الرقم ولا قل لصاحبك ينشئها هو الأول!");
+                alert("ما قدرناش ندخلوا، تأكد باللي صاحبك ضغط 'إنشاء غرفة' هو الأول!");
                 document.getElementById('status-msg').innerText = "";
             });
         }
