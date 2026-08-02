@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الفعاليات أونلاين 🎲</title>
+    <title>لعبة الفعاليات مع شات أونلاين 🎲💬</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
@@ -32,22 +32,22 @@
             background: rgba(30, 27, 75, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            padding: 25px;
+            padding: 20px;
             width: 100%;
             max-width: 500px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        h1 { color: #00cec9; font-size: 24px; margin-bottom: 20px; }
+        h1 { color: #00cec9; font-size: 22px; margin-bottom: 15px; }
 
         input, button {
             width: 100%;
             padding: 12px;
-            margin: 8px 0;
+            margin: 6px 0;
             border-radius: 25px;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             box-sizing: border-box;
         }
 
@@ -84,58 +84,117 @@
             display: flex;
             justify-content: space-around;
             background: rgba(0,0,0,0.3);
-            padding: 15px;
+            padding: 10px;
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .p-card { flex: 1; padding: 5px; }
-        .score { font-size: 26px; color: #ffeaa7; font-weight: bold; }
+        .score { font-size: 24px; color: #ffeaa7; font-weight: bold; }
 
         .q-box {
             background: rgba(255,255,255,0.08);
             border-right: 4px solid var(--accent);
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin: 15px 0;
-            font-size: 18px;
+            margin: 10px 0;
+            font-size: 16px;
             font-weight: bold;
         }
 
-        .turn-box { font-size: 20px; color: #00cec9; font-weight: bold; margin: 10px 0; }
+        .turn-box { font-size: 18px; color: #00cec9; font-weight: bold; margin: 8px 0; }
 
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 10px;
         }
 
         .opt-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid var(--primary);
             border-radius: 12px;
-            padding: 12px;
+            padding: 10px;
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             cursor: pointer;
         }
 
         .opt-btn:hover { background: var(--primary); }
-        .opt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .opt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .feedback-msg {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: bold;
-            margin: 15px 0;
-            min-height: 25px;
+            margin: 8px 0;
+            min-height: 20px;
+        }
+
+        /* --- تصميم الشات --- */
+        .chat-section {
+            margin-top: 15px;
+            border-top: 1px dashed rgba(255,255,255,0.2);
+            padding-top: 10px;
+        }
+
+        .chat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            height: 120px;
+            overflow-y: auto;
+            padding: 8px;
+            text-align: right;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .chat-msg {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 8px;
+            width: fit-content;
+            max-width: 80%;
+            word-break: break-word;
+        }
+
+        .chat-msg.me {
+            background: var(--primary);
+            align-self: flex-start;
+        }
+
+        .chat-msg.other {
+            background: rgba(0, 206, 201, 0.3);
+            align-self: flex-end;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .chat-input-group input {
+            flex: 1;
+            margin: 0;
+            text-align: right;
+            padding: 8px 15px;
+        }
+
+        .chat-input-group button {
+            width: auto;
+            padding: 8px 18px;
+            margin: 0;
+            border-radius: 20px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>🎲 مسابقة الفعاليات أونلاين</h1>
+        <h1>🎲 مسابقة الفعاليات + الشات 💬</h1>
 
         <!-- شاشة الدخول -->
         <div id="login-screen" class="screen active">
@@ -152,14 +211,14 @@
                 <b id="my-peer-id" style="font-size: 18px; color:#00cec9;">جاري التجهيز...</b>
             </div>
 
-            <hr style="opacity: 0.2; margin: 20px 0;">
+            <hr style="opacity: 0.2; margin: 15px 0;">
 
             <input type="text" id="other-peer-id" placeholder="أدخل رمز جهاز صاحبك...">
             <button onclick="connectToPeer()">اتصال وتوصيل الأجهزة 🔗</button>
             <p id="status-msg" style="color:#a29bfe; font-size:14px;"></p>
         </div>
 
-        <!-- شاشة اللعب -->
+        <!-- شاشة اللعب + الشات -->
         <div id="game-screen" class="screen">
             <div class="scoreboard">
                 <div class="p-card">
@@ -186,47 +245,28 @@
             </div>
 
             <div class="feedback-msg" id="feedback-text"></div>
+
+            <!-- قسم المحادثة (الشات) -->
+            <div class="chat-section">
+                <div class="chat-box" id="chat-box">
+                    <small style="color: #aaa; text-align: center;">بداية المحادثة...</small>
+                </div>
+                <div class="chat-input-group">
+                    <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
+                    <button onclick="sendChatMessage()">إرسال 📩</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // بنك الأسئلة مع الإجابات الصحيحة والخيارات
         const quizData = [
-            {
-                q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟",
-                options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"],
-                correct: 1
-            },
-            {
-                q: "ما هو أصغر كوكب في المجموعة الشمسية؟",
-                options: ["المريخ", "عطارد", "الزهرة", "بلوتو"],
-                correct: 1
-            },
-            {
-                q: "كم قلبًا يوجد لدى الأخطبوط؟",
-                options: ["قلب واحد", "قلبان", "3 قلوب", "4 قلوب"],
-                correct: 2
-            },
-            {
-                q: "شيء كلما أخذت منه كبر؟",
-                options: ["الحفرة", "العمر", "المال", "العلم"],
-                correct: 0
-            },
-            {
-                q: "ما هي العاصمة التي يطلق عليها مدينة النور؟",
-                options: ["لندن", "باريس", "روما", "مدريد"],
-                correct: 1
-            },
-            {
-                q: "شيء يملك أسناناً ولكنه لا يعض؟",
-                options: ["المشط", "المنشار", "الزيبار", "القرش"],
-                correct: 0
-            },
-            {
-                q: "ما هو الحيوان الذي يلقب بسفينة الصحراء؟",
-                options: ["الحصان", "الجمل", "الفهد", "الأفعى"],
-                correct: 1
-            }
+            { q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟", options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"], correct: 1 },
+            { q: "ما هو أصغر كوكب في المجموعة الشمسية؟", options: ["المريخ", "عطارد", "الزهرة", "بلوتو"], correct: 1 },
+            { q: "كم قلبًا يوجد لدى الأخطبوط؟", options: ["قلب واحد", "قلبان", "3 قلوب", "4 قلوب"], correct: 2 },
+            { q: "شيء كلما أخذت منه كبر؟", options: ["الحفرة", "العمر", "المال", "العلم"], correct: 0 },
+            { q: "ما هي العاصمة التي يطلق عليها مدينة النور؟", options: ["لندن", "باريس", "روما", "مدريد"], correct: 1 },
+            { q: "شيء يملك أسناناً ولكنه لا يعض؟", options: ["المشط", "المنشار", "الزيبار", "القرش"], correct: 0 }
         ];
 
         let peer = null;
@@ -289,6 +329,8 @@
                 otherScore = data.newScore;
                 updateUI();
                 showFeedback(data.msg, data.isCorrect);
+            } else if(data.type === 'chat') {
+                appendChatMessage(otherName, data.text, 'other');
             }
         }
 
@@ -322,11 +364,9 @@
 
             currentQuestion.options.forEach((opt, idx) => {
                 optButtons[idx].innerText = opt;
-                // تفعيل الأزرار فقط للاعب اللي عليه الدور
                 optButtons[idx].disabled = !isItMe;
             });
 
-            // إخفاء زر القرعة أثناء الإجابة
             document.getElementById('roll-btn').style.display = 'none';
         }
 
@@ -339,17 +379,15 @@
                 myScore += 1;
                 showFeedback("إجابة صحيحة! 🎉 (+1 نقطة)", true);
             } else {
-                myScore -= 1; // خصم نقطة عند الإجابة الخاطئة
-                showFeedback(`إجابة خاطئة! ❌ (-1 نقطة) - الصحيحة هي: ${currentQuestion.options[currentQuestion.correct]}`, false);
+                myScore -= 1;
+                showFeedback(`إجابة خاطئة! ❌ (-1 نقطة) - الصحيحة: ${currentQuestion.options[currentQuestion.correct]}`, false);
             }
 
             updateUI();
 
-            // تعطيل الاختيارات بعد الإجابة وإظهار زر القرعة
             document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
             document.getElementById('roll-btn').style.display = 'block';
 
-            // إرسال التحديث للمنافس
             if(conn) {
                 conn.send({
                     type: 'answer-result',
@@ -358,6 +396,37 @@
                     msg: isCorrect ? `جاوب ${myName} إجابة صحيحة! ✅` : `غلط ${myName} في الإجابة! ❌`
                 });
             }
+        }
+
+        /* --- وظائف الشات --- */
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            appendChatMessage('أنت', text, 'me');
+
+            if(conn) {
+                conn.send({
+                    type: 'chat',
+                    text: text
+                });
+            }
+
+            input.value = '';
+        }
+
+        function handleChatKey(e) {
+            if(e.key === 'Enter') sendChatMessage();
+        }
+
+        function appendChatMessage(sender, text, type) {
+            const box = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-msg ${type}`;
+            msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
         }
 
         function showFeedback(text, isCorrect) {
