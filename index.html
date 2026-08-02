@@ -110,7 +110,7 @@
         <div class="heart-icon">💖</div>
         <h1>إلى أصدق القلوب وأغلاها</h1>
         <p>مهما كتبت من كلمات، تعجز العبارات عن وصف مدى روعة وجودكِ. هذه المساحة البسيطة وُجدت لتكون رسالة حب وتقدير خافقة لكل لحظة جميلة تجمعنا.</p>
-        <button class="btn" onclick="alert('أنتِ الأروع دائماً! ✨') اضغط هنا">اضغط هنا</button>
+        <button class="btn" onclick="alert('أنتِ الأروع دائماً! ✨')">اضغط هنا</button>
     </div>
 
     <!-- كود جافاسكريبت لتوليد القلوب المتحركة في الخلفية بشكل تلقائي -->
@@ -120,7 +120,7 @@
             heart.classList.add('floating-heart');
             heart.innerHTML = ['❤️', '💖', '✨', '🌹', '💫'][Math.floor(Math.random() * 5)];
             heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 3 + 3) + 's'; // سرعة عشوائية
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
             document.body.appendChild(heart);
 
             setTimeout(() => {
