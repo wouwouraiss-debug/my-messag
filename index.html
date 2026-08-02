@@ -1,694 +1,220 @@
-! <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <title>سؤال مهم جداً ❤️</title>
     <style>
-        :root {
-            --bg-glass: rgba(12, 3, 10, 0.85);
-            --card-border: rgba(255, 30, 80, 0.45);
-            --primary: #e60039;
-            --primary-glow: #ff1a53;
-            --accent: #ff3366;
-            --success: #00e676;
-            --danger: #ff1744;
-            --text-color: #ffffff;
-        }
-
         * {
             box-sizing: border-box;
-            user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif, Tahoma;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text-color);
-            min-height: 100vh;
-            margin: 0;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 15px;
-            direction: rtl;
             overflow: hidden;
-            background-color: #121212;
+            position: relative;
         }
 
-        /* --- خلفية الفيديو المصغرة والمركزة كما اتفقنا --- */
-        #bg-video {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 70%;
-            height: auto;
-            transform: translate(-50%, -50%);
-            z-index: -2;
-            object-fit: cover;
-            filter: brightness(0.6) contrast(1.1);
-        }
-
-        .video-overlay {
-            position: fixed;
+        /* خلفية الإيموجي المتحركة (قلوب وورود) */
+        .bg-animation {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: -1;
+            overflow: hidden;
+            z-index: 1;
             pointer-events: none;
         }
 
-        .container {
-            background: var(--bg-glass);
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(15px);
+        .floating-emoji {
+            position: absolute;
+            bottom: -50px;
+            font-size: 24px;
+            animation: floatUp 6s linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
             border-radius: 20px;
-            padding: 20px;
-            width: 100%;
-            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 400px;
+            width: 90%;
             position: relative;
-            z-index: 1;
+            z-index: 2;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .heart {
+            font-size: 50px;
+            color: #ff3366;
+            animation: pulse 1s infinite alternate;
+            margin-bottom: 20px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
         }
 
         h1 {
-            color: #ff4d79;
-            font-size: 22px;
-            margin-top: 0;
-            margin-bottom: 14px;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 30px;
+            line-height: 1.5;
         }
 
-        input, button {
-            width: 100%;
-            padding: 10px 14px;
-            margin: 6px 0;
-            border-radius: 20px;
-            border: none;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-
-        input {
-            background: rgba(10, 2, 6, 0.8);
-            color: white;
-            border: 1px solid var(--primary);
-            text-align: center;
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            height: 60px;
         }
 
         button {
-            background: linear-gradient(45deg, var(--primary), #b3002d);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .screen { display: none; }
-        .active { display: block; }
-
-        .bottom-floating-btns {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 99;
-        }
-
-        .icon-btn {
-            width: 45px !important;
-            height: 45px !important;
-            border-radius: 50% !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 12px 30px;
             font-size: 18px;
-            background: #e60039;
-        }
-
-        .icon-btn.mic-off { background: #333; }
-        .icon-btn.mic-on { background: var(--success); }
-
-        .leaderboard-box {
-            background: rgba(10, 2, 6, 0.6);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 8px;
-            margin-bottom: 10px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-
-        .player-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 10px;
-            margin: 3px 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .player-row.me {
-            border: 1px solid var(--accent);
-            background: rgba(255, 51, 102, 0.2);
-        }
-
-        .q-type-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
             font-weight: bold;
-            background: var(--primary);
-            margin-bottom: 8px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s ease;
         }
 
-        .q-box {
-            background: rgba(20, 3, 10, 0.9);
-            border-right: 3px solid var(--primary-glow);
-            padding: 12px;
-            border-radius: 10px;
-            margin: 10px 0;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .opt-btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--card-border);
-            border-radius: 10px;
-            padding: 10px 6px;
+        #yesBtn {
+            background-color: #28a745;
             color: white;
-            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         }
 
-        .opt-btn:hover {
-            background: rgba(230, 0, 57, 0.4);
+        #yesBtn:hover {
+            background-color: #218838;
+            transform: scale(1.05);
         }
 
-        .text-answer-group {
-            display: flex;
-            gap: 6px;
-            margin-top: 10px;
+        #noBtn {
+            background-color: #dc3545;
+            color: white;
+            position: absolute;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
         }
 
-        audio {
-            width: 100%;
-            margin-top: 8px;
-            height: 35px;
+        .success-message {
+            display: none;
+            color: #ff3366;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+            animation: bounce 0.8s ease infinite alternate;
         }
 
-        .side-chat {
-            position: fixed;
-            top: 0;
-            left: -300px;
-            width: 280px;
-            height: 100%;
-            background: rgba(10, 2, 6, 0.95);
-            border-right: 1px solid var(--primary);
-            transition: left 0.3s ease;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            padding: 14px;
-        }
-
-        .side-chat.open { left: 0; }
-
-        .chat-box {
-            flex: 1;
-            overflow-y: auto;
-            margin: 10px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            text-align: right;
-        }
-
-        .chat-msg {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 12px;
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
         }
     </style>
 </head>
 <body>
 
-    <!-- فيديو الخلفية المركز والمحدد بـ 70% -->
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="video.mp4" type="video/mp4">
-        متصفحك لا يدعم عرض الفيديو.
-    </video>
-    <div class="video-overlay"></div>
+    <!-- حاوية الخلفية المتحركة -->
+    <div class="bg-animation" id="bgAnimation"></div>
 
-    <div class="bottom-floating-btns" id="game-controls" style="display:none;">
-        <button id="mic-btn" class="icon-btn mic-off" onclick="toggleMic()" title="المايك">🎙️</button>
-        <button class="icon-btn" onclick="toggleChat()" title="الشات">💬</button>
-    </div>
-
-    <div class="side-chat" id="side-chat">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:8px;">
-            <h4 style="margin:0; color:#ff4d79;">الدردشة</h4>
-            <button onclick="toggleChat()" style="width:auto; padding:2px 8px; margin:0; background:var(--danger);">✕</button>
+    <div class="card" id="mainCard">
+        <div class="heart">❤️</div>
+        <h1>هل تقبلين أن تكوني الإنسانة الأغلى في حياتي وتوافقي تكوني حبيبتي؟ 🥰</h1>
+        
+        <div class="buttons" id="btnContainer">
+            <button id="yesBtn" onclick="sayYes()">نعم، بكل سرور! ✨</button>
+            <button id="noBtn" onmouseover="moveButton()" onclick="moveButton()">لا 😢</button>
         </div>
-        <div class="chat-box" id="chat-box"></div>
-        <div style="display:flex; gap:4px;">
-            <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
-            <button onclick="sendChatMessage()" style="width:auto; padding:6px 12px; margin:0;">إرسال</button>
+
+        <div class="success-message" id="successText">
+            كنت متأكداً أنك لن تقولي لا! أحبكِ جداً ❤️💍
         </div>
     </div>
-
-    <div class="container">
-        <h1>🎲 كوكتيل الفعاليات الجماعية 🎤</h1>
-
-        <div id="login-screen" class="screen active">
-            <input type="text" id="username" placeholder="اكتب اسمك هنا..." maxlength="15">
-            <button onclick="saveName()">التالي 🚀</button>
-        </div>
-
-        <div id="room-screen" class="screen">
-            <h3>مرحباً <span id="player-name-display" style="color:#ff809f;"></span>!</h3>
-            <input type="number" id="room-code" placeholder="كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
-            <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
-            <p id="status-msg" style="color:#ff809f; font-size:13px; margin-top:8px;"></p>
-        </div>
-
-        <div id="game-screen" class="screen">
-            <div class="leaderboard-box" id="leaderboard"></div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span id="turn-display" style="font-size:13px; font-weight:bold; color:#ff4d79;">انتظار الدور...</span>
-                <span id="timer-badge" style="background:#333; padding:2px 8px; border-radius:6px; font-size:12px; color:#ffc107;">⏱️ 20s</span>
-            </div>
-
-            <button id="roll-btn" onclick="rollTurn()" style="display:none;">🎲 سحب سؤال جديد</button>
-
-            <div id="activity-card" style="display:none;">
-                <span class="q-type-badge" id="q-badge">فعالية</span>
-                <div class="q-box" id="question-text"></div>
-
-                <div id="audio-player-box" style="display:none;">
-                    <audio id="song-audio" controls></audio>
-                </div>
-
-                <div class="options-grid" id="options-container" style="display:none;">
-                    <button class="opt-btn" onclick="checkAnswer(0)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(1)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(2)"></button>
-                    <button class="opt-btn" onclick="checkAnswer(3)"></button>
-                </div>
-
-                <div class="text-answer-group" id="text-input-container" style="display:none;">
-                    <input type="text" id="text-answer-input" placeholder="اكتب الإجابة (أقل من 20 ثانية)..." maxlength="50">
-                    <button onclick="checkTextAnswer()" style="width:auto; padding:6px 15px;">تأكيد 🎯</button>
-                </div>
-            </div>
-
-            <div id="feedback-text" style="font-size:13px; font-weight:bold; margin:6px 0; min-height:18px;"></div>
-        </div>
-    </div>
-
-    <div id="audio-container"></div>
 
     <script>
-        function sanitize(str) {
-            if (typeof str !== 'string') return '';
-            return str.replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
-        }
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const successText = document.getElementById('successText');
+        const btnContainer = document.getElementById('btnContainer');
+        const bgAnimation = document.getElementById('bgAnimation');
 
-        const initialEventsData = [
-            { id: 1, type: "أسئلة حب وهضرة ❤️", q: "من هي حب ناروتو الأول والأبدي التي تزوجها؟", options: ["إينو", "هيناتا", "كوشينا", "أكاني"], correct: 1 },
-            { id: 2, type: "أسئلة حب وهضرة ❤️", q: "من هي زوجة ميناتو وأم ناروتو ذات الشعر الأحمر؟", options: ["كوشينا", "إينو", "أكاني", "تسونادي"], correct: 0 },
-            { id: 3, type: "أسئلة حب وهضرة ❤️", q: "من هو العضو المقرب لـ ساسوري في الأكاتسكي؟", options: ["وسيم", "ديدارا", "حسين", "مادارا"], correct: 1 },
-            { id: 4, type: "أغاني ومقاطع قصيرة (أقل من 20 ثانية) 🎧", q: "استمع للمقطع الصوتي القصير واعرف اسم الكرتون:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", mode: "text", correctText: "سبيستون" },
-            { id: 5, type: "أغاني ومقاطع قصيرة (أقل من 20 ثانية) 🎧", q: "اسمع المقطع القصير واكتب اسم الأغنية:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", mode: "text", correctText: "أبطال الديجيتال" }
-        ];
+        // مصفوفة الإيموجي الخاصة بالورد والقلوب
+        const emojis = ['❤️', '🌹', '💖', '💐', '🌸', '💕', '🌷', '💘'];
 
-        let availableEvents = [...initialEventsData];
-        let client = null;
-        let peer = null;
-        let myId = Math.random().toString(36).substring(7);
-        let roomTopic = "";
-        let myName = "";
-        let players = {};
-        let currentEvent = null;
-        let currentTurnPlayerId = "";
-        let turnTimer = null;
-        let timeLeft = 20;
-
-        let localAudioStream = null;
-        let isMicOn = false;
-
-        function saveName() {
-            const rawName = document.getElementById('username').value.trim();
-            myName = sanitize(rawName);
-            if(!myName) return alert("يرجى كتابة اسم صحيح!");
-            document.getElementById('player-name-display').innerText = myName;
-            showScreen('room-screen');
-        }
-
-        function joinGameRoom() {
-            const code = document.getElementById('room-code').value.trim();
-            if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
-
-            document.getElementById('status-msg').innerText = "جاري الاتصال باللعبة...";
-            roomTopic = "ayoub_cocktail_room_" + code;
-
-            peer = new Peer(myId + "_" + code);
-
-            peer.on('open', () => {
-                client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
-
-                client.on('connect', () => {
-                    client.subscribe(roomTopic);
-                    showScreen('game-screen');
-                    document.getElementById('game-controls').style.display = 'flex';
-
-                    players[myId] = { name: myName, score: 0, peerId: peer.id };
-                    updateUI();
-
-                    broadcastData({ type: 'join', senderId: myId, name: myName, score: 0, peerId: peer.id });
-                    
-                    // إذا كان أول لاعب يقدر يبدأ السحب
-                    if(Object.keys(players).length === 1) {
-                        document.getElementById('roll-btn').style.display = 'block';
-                    }
-                });
-
-                client.on('message', (topic, message) => {
-                    try {
-                        const data = JSON.parse(message.toString());
-                        if(data.senderId !== myId) handleData(data);
-                    } catch(e) {}
-                });
-            });
-
-            peer.on('call', (call) => {
-                call.answer(localAudioStream);
-                call.on('stream', (remoteStream) => {
-                    addAudioStream(call.peer, remoteStream);
-                });
-            });
-        }
-
-        function broadcastData(data) {
-            data.senderId = myId;
-            if(client) client.publish(roomTopic, JSON.stringify(data));
-        }
-
-        function handleData(data) {
-            const safeName = sanitize(data.name || data.senderName || '');
+        // دالة لتوليد الإيموجي المتحركة باستمرار في الخلفية
+        function createFloatingEmoji() {
+            const emojiSpan = document.createElement('div');
+            emojiSpan.classList.add('floating-emoji');
             
-            if(data.type === 'join') {
-                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
-                updateUI();
-                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score, peerId: peer.id });
-                if(isMicOn && localAudioStream && data.peerId) callPeer(data.peerId);
-            } 
-            else if(data.type === 'sync-player') {
-                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
-                updateUI();
-            }
-            else if(data.type === 'roll') {
-                setupEventState(data.chosenEvent, data.turnPlayerId, data.turnPlayerName);
-            } 
-            else if(data.type === 'score-update') {
-                if(players[data.senderId]) {
-                    players[data.senderId].score = data.newScore;
-                    updateUI();
-                }
-            }
-            else if(data.type === 'next-turn') {
-                // تلقائياً الانتقال للطرف الآخر وسحب سؤال جديد
-                setupEventState(data.chosenEvent, data.nextPlayerId, data.nextPlayerName);
-            }
-            else if(data.type === 'chat') {
-                appendChatMessage(safeName, sanitize(data.text));
-            }
-        }
-
-        function rollTurn() {
-            const playerKeys = Object.keys(players);
-            if(playerKeys.length === 0) return;
-            const randomPlayerId = playerKeys[Math.floor(Math.random() * playerKeys.length)];
+            // اختيار إيموجي عشوائي
+            emojiSpan.innerText = emojis[Math.floor(Math.random() * emojis.length)];
             
-            triggerNewRound(randomPlayerId);
+            // مواقع وأحجام عشوائية
+            emojiSpan.style.left = Math.random() * 100 + 'vw';
+            emojiSpan.style.fontSize = (Math.random() * 20 + 18) + 'px';
+            
+            // سرعة حركة عشوائية
+            const duration = Math.random() * 3 + 4; // ما بين 4 و 7 ثواني
+            emojiSpan.style.animationDuration = duration + 's';
+
+            bgAnimation.appendChild(emojiSpan);
+
+            // إزالة الإيموجي بعد انتهاء الأنيميشن لتخفيف الحمل عن المتصفح
+            setTimeout(() => {
+                emojiSpan.remove();
+            }, duration * 1000);
         }
 
-        function triggerNewRound(targetPlayerId) {
-            if (availableEvents.length === 0) {
-                availableEvents = [...initialEventsData];
-            }
-            const qIndex = Math.floor(Math.random() * availableEvents.length);
-            const chosenEvent = availableEvents.splice(qIndex, 1)[0];
-            const targetName = players[targetPlayerId] ? players[targetPlayerId].name : "لاعب";
+        // توليد إيموجي كل 300 جزء من الثانية
+        setInterval(createFloatingEmoji, 300);
 
-            setupEventState(chosenEvent, targetPlayerId, targetName);
-            broadcastData({ type: 'roll', chosenEvent: chosenEvent, turnPlayerId: targetPlayerId, turnPlayerName: targetName });
+        // دالة زر "لا" الهارب
+        function moveButton() {
+            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 100);
+            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 100);
+            
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${Math.max(20, x)}px`;
+            noBtn.style.top = `${Math.max(20, y)}px`;
         }
 
-        function setupEventState(event, playerId, playerName) {
-            currentEvent = event;
-            currentTurnPlayerId = playerId;
-
-            document.getElementById('turn-display').innerText = `🎯 دور اللاعب: ${playerName} ${playerId === myId ? '(أنت)' : ''}`;
-            document.getElementById('activity-card').style.display = 'block';
-            document.getElementById('q-badge').innerText = currentEvent.type;
-            document.getElementById('question-text').innerText = currentEvent.q;
-            document.getElementById('feedback-text').innerText = "";
-            document.getElementById('roll-btn').style.display = 'none';
-
-            const audioBox = document.getElementById('audio-player-box');
-            const songAudio = document.getElementById('song-audio');
-            const optGrid = document.getElementById('options-container');
-            const textGroup = document.getElementById('text-input-container');
-
-            if(currentEvent.audioUrl) {
-                audioBox.style.display = 'block';
-                songAudio.src = currentEvent.audioUrl;
-                songAudio.play().catch(()=>{});
-            } else {
-                audioBox.style.display = 'none';
-                songAudio.pause();
-            }
-
-            optGrid.style.display = 'none';
-            textGroup.style.display = 'none';
-
-            if(currentEvent.mode === 'text') {
-                textGroup.style.display = 'flex';
-                document.getElementById('text-answer-input').value = '';
-                document.getElementById('text-answer-input').disabled = (myId !== currentTurnPlayerId);
-            } else {
-                optGrid.style.display = 'grid';
-                const optButtons = document.querySelectorAll('.opt-btn');
-                currentEvent.options.forEach((opt, idx) => {
-                    optButtons[idx].innerText = opt;
-                    optButtons[idx].disabled = (myId !== currentTurnPlayerId);
-                });
-            }
-
-            startTimer();
-        }
-
-        function startTimer() {
-            clearInterval(turnTimer);
-            timeLeft = 20;
-            document.getElementById('timer-badge').innerText = `⏱️ ${timeLeft}s`;
-
-            turnTimer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer-badge').innerText = `⏱️ ${timeLeft}s`;
-                if(timeLeft <= 0) {
-                    clearInterval(turnTimer);
-                    handleTimeOutOrWrong("انتهى الوقت ولم تجب! ❌");
-                }
-            }, 1000);
-        }
-
-        function checkAnswer(selectedIndex) {
-            if(myId !== currentTurnPlayerId) return;
-            clearInterval(turnTimer);
-
-            const isCorrect = (selectedIndex === currentEvent.correct);
-            processAnswerResult(isCorrect, currentEvent.options[currentEvent.correct]);
-        }
-
-        function checkTextAnswer() {
-            if(myId !== currentTurnPlayerId) return;
-            const userAns = sanitize(document.getElementById('text-answer-input').value.trim());
-            if(!userAns) return;
-            clearInterval(turnTimer);
-
-            const isCorrect = userAns.toLowerCase() === currentEvent.correctText.toLowerCase();
-            processAnswerResult(isCorrect, currentEvent.correctText);
-        }
-
-        function handleTimeOutOrWrong(msg) {
-            if(myId === currentTurnPlayerId) {
-                players[myId].score = Math.max(0, players[myId].score - 1);
-                updateUI();
-                broadcastData({ type: 'score-update', newScore: players[myId].score });
-                
-                showFeedback(msg, false);
-                
-                // الانتقال التلقائي للطرف الآخر (صوطي وحدو)
-                setTimeout(() => {
-                    autoSwitchToNextPlayer();
-                }, 1500);
-            }
-        }
-
-        function processAnswerResult(isCorrect, correctAnsText) {
-            if(isCorrect) {
-                players[myId].score += 1;
-                showFeedback(`إجابة صحيحة! 🎉 (+1 نقطة)`, true);
-                updateUI();
-                broadcastData({ type: 'score-update', newScore: players[myId].score });
-                
-                // تفعيل زر السحب للسؤال الموالي
-                setTimeout(() => {
-                    document.getElementById('roll-btn').style.display = 'block';
-                    document.getElementById('activity-card').style.display = 'none';
-                }, 1500);
-            } else {
-                players[myId].score = Math.max(0, players[myId].score - 1);
-                showFeedback(`خطأ! الإجابة الصحيحة هي: (${correctAnsText}) ❌`, false);
-                updateUI();
-                broadcastData({ type: 'score-update', newScore: players[myId].score });
-
-                setTimeout(() => {
-                    autoSwitchToNextPlayer();
-                }, 1500);
-            }
-        }
-
-        function autoSwitchToNextPlayer() {
-            // إيجاد الطرف الآخر تلقائياً وتمرير الدور وسحب سؤال جديد
-            const playerKeys = Object.keys(players);
-            if(playerKeys.length < 2) {
-                document.getElementById('roll-btn').style.display = 'block';
-                document.getElementById('activity-card').style.display = 'none';
-                return;
-            }
-
-            const currentIndex = playerKeys.indexOf(currentTurnPlayerId);
-            const nextIndex = (currentIndex + 1) % playerKeys.length;
-            const nextPlayerId = playerKeys[nextIndex];
-            const nextPlayerName = players[nextPlayerId].name;
-
-            if (availableEvents.length === 0) availableEvents = [...initialEventsData];
-            const qIndex = Math.floor(Math.random() * availableEvents.length);
-            const chosenEvent = availableEvents.splice(qIndex, 1)[0];
-
-            setupEventState(chosenEvent, nextPlayerId, nextPlayerName);
-            broadcastData({ type: 'next-turn', chosenEvent: chosenEvent, nextPlayerId: nextPlayerId, nextPlayerName: nextPlayerName });
-        }
-
-        async function toggleMic() {
-            const btn = document.getElementById('mic-btn');
-            if (!isMicOn) {
-                try {
-                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    isMicOn = true;
-                    btn.classList.remove('mic-off');
-                    btn.classList.add('mic-on');
-                    Object.values(players).forEach(p => {
-                        if(p.peerId && p.peerId !== peer.id) callPeer(p.peerId);
-                    });
-                } catch (err) {
-                    alert("يجب السماح بالمايك!");
-                }
-            } else {
-                if (localAudioStream) localAudioStream.getAudioTracks().forEach(t => t.enabled = false);
-                isMicOn = false;
-                btn.classList.remove('mic-on');
-                btn.classList.add('mic-off');
-            }
-        }
-
-        function callPeer(peerId) {
-            if(!localAudioStream) return;
-            const call = peer.call(peerId, localAudioStream);
-            call.on('stream', (remoteStream) => addAudioStream(peerId, remoteStream));
-        }
-
-        function addAudioStream(id, stream) {
-            let audio = document.getElementById("audio_" + id);
-            if (!audio) {
-                audio = document.createElement('audio');
-                audio.id = "audio_" + id;
-                audio.autoplay = true;
-                document.getElementById('audio-container').appendChild(audio);
-            }
-            audio.srcObject = stream;
-        }
-
-        function toggleChat() { document.getElementById('side-chat').classList.toggle('open'); }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const text = sanitize(input.value.trim());
-            if(!text) return;
-            appendChatMessage('أنت', text);
-            broadcastData({ type: 'chat', senderName: myName, text: text });
-            input.value = '';
-        }
-
-        function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
-
-        function appendChatMessage(sender, text) {
-            const box = document.getElementById('chat-box');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'chat-msg';
-            msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
-            box.appendChild(msgDiv);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function showFeedback(text, isCorrect) {
-            const fb = document.getElementById('feedback-text');
-            fb.innerText = text;
-            fb.style.color = isCorrect ? 'var(--success)' : 'var(--danger)';
-        }
-
-        function updateUI() {
-            const box = document.getElementById('leaderboard');
-            box.innerHTML = '';
-            const sorted = Object.keys(players).map(id => ({ id, ...players[id] })).sort((a, b) => b.score - a.score);
-            sorted.forEach(p => {
-                const row = document.createElement('div');
-                row.className = `player-row ${p.id === myId ? 'me' : ''}`;
-                row.innerHTML = `<span><b>${p.name}</b> ${p.id === myId ? '(أنت)' : ''}</span> <span><b>${p.score}</b> نقطة</span>`;
-                box.appendChild(row);
-            });
-        }
-
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+        // دالة زر "نعم"
+        function sayYes() {
+            btnContainer.style.display = 'none';
+            document.querySelector('h1').style.display = 'none';
+            document.querySelector('.heart').style.fontSize = '80px';
+            successText.style.display = 'block';
         }
     </script>
+
 </body>
 </html>
