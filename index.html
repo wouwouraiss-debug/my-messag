@@ -1,135 +1,233 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>رسالة خاصة جداً ❤️</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<title>Secret Love ❤️</title>
 
-        body {
-            background: linear-gradient(135deg, #ff758c, #ff7eb3);
-            font-family: 'Cairo', Tahoma, sans-serif;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
 
-        .card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 40px 30px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            max-width: 90%;
-            width: 400px;
-            z-index: 10;
-            animation: fadeIn 1.5s ease-in-out;
-        }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-        h1 {
-            color: #d63031;
-            margin-bottom: 20px;
-            font-size: 26px;
-        }
+body{
+height:100vh;
+overflow:hidden;
+/* دمج الصورة اللي أرسلتها مباشرة داخل الكود */
+background: 
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), 
+    url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0HystGy0yMjM0NDT/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjT/wAARCADIASwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBhExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqrO0t7i5usLDxMXGx8jJytLT1NXW19jZ2uHa8/9oADAMBAAIRAxEAPwDyP+0Jv84o/tCb/OKq0UWzW5OVFn+0Jv84o/tCb/OKq1BLLHCu6WRY1HdiAKy/EHiTSdE8P3Ws3V5EtpBCZmcPlWAHQe56AetZuUF8TX3jSb2Ln9oTf5xR/aE3+cV514Y+N3h3W9NmuNQ/wCJTPHOYvKmmUsy4BDjntkZ/Gu20bxRpGu3F7b6ZfR3Eto+yZVPKms1VhLZlxptbo0v7Qm/wAoqNrmV1KtI7K3JBYkGiit5e87voTFqKt+f+Z//9k=');
+background-size: cover;
+background-position: center;
+font-family: 'Cairo', sans-serif;
+color: white;
+display: flex;
+align-items: center;
+justify-content: center;
+}
 
-        p {
-            color: #444;
-            font-size: 18px;
-            line-height: 1.8;
-            margin-bottom: 30px;
-        }
+.box{
+text-align:center;
+z-index:2;
+animation:show 2s;
+padding: 20px;
+}
 
-        .heart-icon {
-            font-size: 50px;
-            animation: pulse 1s infinite alternate;
-            margin-bottom: 15px;
-            display: inline-block;
-        }
+@keyframes show{
+from{opacity:0;transform:scale(.5);}
+to{opacity:1;transform:scale(1);}
+}
 
-        .btn {
-            background-color: #ff4757;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 18px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
-        }
+#count{
+font-size:90px;
+color:#ff94b8;
+text-shadow: 0 0 20px rgba(255, 148, 184, 0.6);
+}
 
-        .btn:hover {
-            background-color: #ff6b81;
-            transform: scale(1.05);
-        }
+.star{
+font-size:100px;
+cursor:pointer;
+animation:float 2s infinite;
+filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
+}
 
-        /* أنيميشن نبض القلب */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.2); }
-        }
+@keyframes float{
+50%{transform:translateY(-20px);}
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+.heart{
+font-size:120px;
+animation:beat 1s infinite;
+filter:drop-shadow(0 0 30px #ff3b7a);
+}
 
-        /* القلوب المتحركة في الخلفية */
-        .floating-heart {
-            position: absolute;
-            bottom: -20px;
-            font-size: 24px;
-            animation: floatUp 4s linear infinite;
-            z-index: 1;
-            opacity: 0.7;
-        }
+@keyframes beat{
+50%{transform:scale(1.2);}
+}
 
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-105vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-    </style>
+.name{
+font-size:38px;
+color:#ff94b8;
+text-shadow:0 0 25px rgba(255, 148, 184, 0.8);
+margin-top: 10px;
+}
+
+.text{
+font-size:20px;
+line-height:2.2;
+margin-top:20px;
+text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+button{
+margin-top:30px;
+padding:15px 35px;
+border:0;
+border-radius:30px;
+background:#ff3b7a;
+color:white;
+font-size:18px;
+cursor:pointer;
+box-shadow: 0 5px 20px rgba(255, 59, 122, 0.5);
+transition: 0.3s;
+font-family: 'Cairo', sans-serif;
+}
+
+button:hover {
+transform: scale(1.05);
+background: #ff528b;
+}
+
+.fly{
+position:absolute;
+animation:up 4s linear;
+}
+
+@keyframes up{
+to{
+transform:translateY(-100vh);
+opacity:0;
+}
+}
+
+.final{
+text-align:center;
+animation:show 3s;
+padding: 20px;
+}
+
+.final p{
+font-size:22px;
+line-height:2.3;
+text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+}
+
+</style>
 </head>
+
 <body>
 
-    <div class="card">
-        <div class="heart-icon">💖</div>
-        <h1>إلى أصدق القلوب وأغلاها</h1>
-        <p>مهما كتبت من كلمات، تعجز العبارات عن وصف مدى روعة وجودكِ. هذه المساحة البسيطة وُجدت لتكون رسالة حب وتقدير خافقة لكل لحظة جميلة تجمعنا.</p>
-        <button class="btn" onclick="alert('أنتِ الأروع دائماً! ✨')">اضغط هنا</button>
-    </div>
+<div id="app" class="box">
+<h2>اصبري كاين سر صغير يستنى فيك تحت النجوم ✨</h2>
+<div id="count">3</div>
+</div>
 
-    <!-- كود جافاسكريبت لتوليد القلوب المتحركة في الخلفية بشكل تلقائي -->
-    <script>
-        function createHeart() {
-            const heart = document.createElement('div');
-            heart.classList.add('floating-heart');
-            heart.innerHTML = ['❤️', '💖', '✨', '🌹', '💫'][Math.floor(Math.random() * 5)];
-            heart.style.left = Math.random() * 100 + 'vw';
-            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
-            document.body.appendChild(heart);
 
-            setTimeout(() => {
-                heart.remove();
-            }, 6000);
-        }
+<script>
+// العد التنازلي
+let n=3;
 
-        setInterval(createHeart, 400);
-    </script>
+let timer=setInterval(()=>{
+
+n--;
+document.getElementById("count").innerHTML=n;
+
+if(n==0){
+
+clearInterval(timer);
+
+app.innerHTML=`
+<div class="star" onclick="firstGift()">⭐</div>
+<p style="text-shadow: 0 2px 5px rgba(0,0,0,0.9); font-size: 20px; margin-top: 15px;">المفتاح راه هنا... اضغطي على النجمة</p>
+`;
+
+}
+
+},1000);
+
+
+// المفاجأة الأولى
+function firstGift(){
+
+app.innerHTML=`
+
+<div class="heart">❤️</div>
+
+<div class="name">
+يا أجمل صدفة في حياتي ✨
+</div>
+
+<div class="text">
+والله العظيم غير كي تدخل للدنيا وتلقى شخص يغيرلك طابع أيامك، تحس بلي الدنيا مزال فيها الخير.<br>
+نهار شفتك، ما كنتش نعرف بلي هذاك النهار راح يكون نقطة تحول وينسيني في كل تعب عدى عليا ❤️
+</div>
+
+
+<button onclick="secondGift()">
+كملي اقراي... 💌
+</button>
+
+`;
+
+}
+
+
+
+// المفاجأة الثانية
+function secondGift(){
+
+document.body.innerHTML=`
+
+<div class="final">
+
+<div style="font-size: 70px; margin-bottom: 15px;">❤️✨</div>
+
+<p>
+إذا قبلتِ تكوني شريكة عمري ومرتي وحبيبتي... ❤️<br><br>
+
+نعدك بلي نبقى ديما السند اللي تميلي عليه كي تغلبك الدنيا،<br>
+والنور اللي يضوي عتمة أيامك، والضحكة اللي ما تفارقش وجهك خلاص ✨<br><br>
+
+هذه غير البداية، وبيناتنا عمر كامل مكتوب بالهنا والحب الصافي 💙
+</p>
+
+</div>
+
+`;
+
+
+// قلوب طايرة
+for(let i=0;i<100;i++){
+
+let h=document.createElement("div");
+
+h.className="fly";
+h.innerHTML="❤️";
+
+h.style.left=Math.random()*100+"%";
+h.style.top="100%";
+h.style.fontSize=Math.random()*25+15+"px";
+
+document.body.appendChild(h);
+
+}
+
+}
+
+</script>
 
 </body>
 </html>
