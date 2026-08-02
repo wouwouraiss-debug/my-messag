@@ -84,7 +84,7 @@
         .screen { display: none; }
         .active { display: block; }
 
-        /* --- الأزرار العائمة في الأسفل (مايك + شات) --- */
+        /* الأزرار العائمة (مايك + شات) */
         .bottom-floating-btns {
             position: fixed;
             bottom: 20px;
@@ -109,14 +109,8 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
 
-        .icon-btn.mic-off {
-            background: #2d3436;
-        }
-
-        .icon-btn.mic-on {
-            background: var(--success);
-            box-shadow: 0 0 15px var(--success);
-        }
+        .icon-btn.mic-off { background: #2d3436; }
+        .icon-btn.mic-on { background: var(--success); box-shadow: 0 0 15px var(--success); }
 
         .leaderboard-box {
             background: rgba(0,0,0,0.3);
@@ -186,7 +180,6 @@
             margin-top: 10px;
         }
 
-        /* --- الشات الجانبي --- */
         .side-chat {
             position: fixed;
             top: 0;
@@ -237,13 +230,11 @@
 </head>
 <body>
 
-    <!-- أزرار المايك والشات العائمة جانب بعضها -->
     <div class="bottom-floating-btns" id="game-controls" style="display:none;">
         <button id="mic-btn" class="icon-btn mic-off" onclick="toggleMic()" title="المايك">🎙️</button>
         <button class="icon-btn" onclick="toggleChat()" title="الشات">💬</button>
     </div>
 
-    <!-- لوحة الشات الجانبية -->
     <div class="side-chat" id="side-chat">
         <div class="chat-header">
             <h4 style="margin:0; color:#00cec9;">دردشة الغرفة 💬</h4>
@@ -309,14 +300,35 @@
             });
         }
 
+        // --- بنك الأسئلة المطور: أسئلة الحب + 15 أغنية ---
         const eventsData = [
-            { type: "تحدي الديسكورد 🤖", q: "ما هو البوت الخاص بإدارة الرتب والترحيب والشائعة استخدامه؟", options: ["ProBot", "Carl-bot", "Rythm", "Mee6"], correct: 0 },
-            { type: "تحدي الديسكورد 👑", q: "ما هي الرتبة التي تملك كامل الصلاحيات في السيرفر؟", options: ["Moderator", "Administrator", "VIP", "Member"], correct: 1 },
-            { type: "تحدي الديسكورد 💬", q: "ما هو الاختصار المستخدم لطرد عضو مؤقتاً بالديسكورد؟", options: ["/ban", "/timeout", "/kick", "/warn"], correct: 2 },
-            { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( السيرفر / في / أهلاً / بكم )", mode: "text", correctText: "أهلا بكم في السيرفر" },
-            { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( التحدي / اليوم / ينطلق / أقوى )", mode: "text", correctText: "ينطلق أقوى التحدي اليوم" },
-            { type: "فك الجملة المعكوسة 🔄", q: "اقرأ الجملة واكتبها بالشكل الصحيح: 'رباطسإ سركيسد'", mode: "text", correctText: "إسباطر ديسكورد" },
-            { type: "فك الجملة المعكوسة 🔄", q: "اكتب الجملة بالترتيب الصحيح: 'ديكوا طاشن'", mode: "text", correctText: "نشاط أكيد" }
+            // --- قسم أسئلة الحب والعلاقات ---
+            { type: "أسئلة الحب ❤️", q: "من هي حب ناروتو الأول والأبدي التي تزوجها؟", options: ["إينو", "هيناتا", "كوشينا", "أكاني"], correct: 1 },
+            { type: "أسئلة الحب ❤️", q: "من هي زوجة ميناتو وأم ناروتو ذات الشعر الأحمر؟", options: ["كوشينا", "إينو", "أكاني", "تسونادي"], correct: 0 },
+            { type: "أسئلة الحب ❤️", q: "من هو العضو المقرب والرفيق لـ ساسوري في الأكاتسكي (ديفو/ديدارا)؟", options: ["وسيم", "ديدارا", "حسين", "مادارا"], correct: 1 },
+            { type: "أسئلة الحب ❤️", q: "من هو المدمور بحب تسونادي وكان يكتب الروايات؟", options: ["جيرايا", "دانكوتو", "حسين", "وسيم"], correct: 0 },
+            { type: "أسئلة الحب ❤️", q: "إينو كانت تنافس من على حب ساسكي؟", options: ["كوشينا", "ساكورا", "أكاني", "هيناتا"], correct: 1 },
+            { type: "أسئلة الحب ❤️", q: "من هي الشخصية التي تحب أكاني في الأنمي/التحديات؟", options: ["وسيم", "دانكوتو", "حسين", "ساسوري"], correct: 1 },
+            { type: "أسئلة الحب ❤️", q: "شخصية مادارا الأسطورية، من كان منافسه وصديقه المقرب؟", options: ["هاشيراما", "حسين", "وسيم", "جيرايا"], correct: 0 },
+            { type: "أسئلة الحب ❤️", q: "مين اللي دايماً يطقطقوا عليه ويقولوا وسيم الغرام؟", options: ["وسيم", "حسين", "ساسوري", "دانكوتو"], correct: 0 },
+            { type: "أسئلة الحب ❤️", q: "حسين في التحديات مين تحب شخصيته من البنات؟", options: ["إينو", "أكاني", "كوشينا", "ساكورا"], correct: 1 },
+
+            // --- قسم تخمين الأغاني (15 أغنية قصيرة ومشهورة) ---
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'ما زال ما زال...'", mode: "text", correctText: "عشقي ليك ما زال" },
+            { type: "تخمين الأغنية 🎤", q: "ما هي الأغنية الشهيرة: 'قد لمعت أنواراً في الرسم...'؟", mode: "text", correctText: "سبيستون" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'أمي كم أهواها...'", mode: "text", correctText: "اشتاق لمرآها" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'بابار الفيل...'", mode: "text", correctText: "الطيب النبيل" },
+            { type: "تخمين الأغنية 🎤", q: "اسم أغنية كرتون: 'في فوهة البركان...'", mode: "text", correctText: "أبطال الديجيتال" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'من يعرف كيف يقدم للناس...'", mode: "text", correctText: "المعونة" },
+            { type: "تخمين الأغنية 🎤", q: "ما هي الأغنية التي تبدأ بـ: 'سوف نبقى هنا...'؟", mode: "text", correctText: "سوف نبقى هنا" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'يا طيبة يا طيبة...'", mode: "text", correctText: "يا دوا العيانا" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'حلمنا نهار...'", mode: "text", correctText: "ونهارنا عمل" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'لا تبكِ يا صغيري...'", mode: "text", correctText: "لا انظر لنحونا" },
+            { type: "تخمين الأغنية 🎤", q: "اسم الأغنية: 'أنا وأخي...'", mode: "text", correctText: "أنا وأخي" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الكلمات: 'شوت شوت شوت...'", mode: "text", correctText: "سدد وجول" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'عيون المها...'", mode: "text", correctText: "بين الرصافة والجسري" },
+            { type: "تخمين الأغنية 🎤", q: "ما اسم شارة كرتون: 'سيف قاطع كالنور...'؟", mode: "text", correctText: "السيف القاطع" },
+            { type: "تخمين الأغنية 🎤", q: "أكمل الأغنية: 'طريقي مضيء...'؟", mode: "text", correctText: "بالأمل" }
         ];
 
         let client = null;
@@ -517,10 +529,11 @@
             processResult(isCorrect, currentEvent.correctText);
         }
 
+        // حساب +1 نقطة برك فقط عند الإجابة الصحيحة
         function processResult(isCorrect, correctAnsText) {
             if(isCorrect) {
                 players[myId].score += 1;
-                showFeedback(`إجابة صحيحة ممتاز! 🎉`, true);
+                showFeedback(`إجابة صحيحة ممتاز! 🎉 (+1 نقطة)`, true);
             } else {
                 players[myId].score = Math.max(0, players[myId].score - 1);
                 showFeedback(`خاطئة! ❌ الإجابة الصحيحة: (${correctAnsText})`, false);
