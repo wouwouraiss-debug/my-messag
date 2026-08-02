@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
-    <!-- مكتبة WebSocket MQTT المباشرة -->
+    <!-- مكتبة WebSocket MQTT -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
-            --bg: #0f0c20;
-            --card: #1e1b4b;
+            --card-bg: rgba(30, 27, 75, 0.9);
             --primary: #6c5ce7;
             --accent: #fd79a8;
             --success: #00b894;
@@ -17,9 +16,12 @@
             --warning: #fdcb6e;
         }
 
+        /* خلفية ديناميكية متحركة */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #2d1b69, var(--bg));
+            background: linear-gradient(-45deg, #0f0c20, #2d1b69, #1e1b4b, #130f40);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: white;
             min-height: 100vh;
             margin: 0;
@@ -29,18 +31,27 @@
             padding: 15px;
             direction: rtl;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .container {
-            background: rgba(30, 27, 75, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 20px;
             width: 100%;
             max-width: 550px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             position: relative;
+            z-index: 10;
         }
 
         h1 { color: #00cec9; font-size: 22px; margin-bottom: 10px; }
@@ -56,7 +67,7 @@
         }
 
         input {
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             color: white;
             border: 1px solid var(--primary);
             text-align: center;
@@ -74,6 +85,22 @@
 
         .screen { display: none; }
         .active { display: block; }
+
+        /* شريط المايك والتغييرات العلوي */
+        .controls-top {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .mic-btn {
+            background: #2d3436;
+            flex: 1;
+            margin: 0;
+        }
+        .mic-btn.active-mic {
+            background: var(--success);
+        }
 
         /* --- جدول المتصدرين --- */
         .leaderboard-box {
@@ -101,7 +128,7 @@
             background: rgba(253, 121, 168, 0.2);
         }
 
-        /* --- بطاقات التحديات والفعاليات --- */
+        /* --- بطاقات الفعاليات --- */
         .q-type-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -123,8 +150,6 @@
             line-height: 1.5;
         }
 
-        .turn-box { font-size: 15px; color: #00cec9; font-weight: bold; margin: 8px 0; }
-
         .options-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -139,11 +164,9 @@
             padding: 10px;
             color: white;
             font-size: 14px;
-            cursor: pointer;
         }
 
         .opt-btn:hover { background: var(--primary); }
-        .opt-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .text-answer-group {
             display: flex;
@@ -158,35 +181,7 @@
             min-height: 20px;
         }
 
-        /* --- المتجر --- */
-        .shop-btn-top {
-            background: linear-gradient(45deg, #f0932b, #ffbe76);
-            margin-bottom: 10px;
-        }
-
-        .shop-modal {
-            display: none;
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 12, 32, 0.95);
-            border-radius: 20px;
-            padding: 20px;
-            z-index: 50;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .shop-item {
-            background: rgba(255,255,255,0.08);
-            padding: 10px;
-            border-radius: 10px;
-            margin: 6px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* --- الشات الجانبي المميز --- */
+        /* --- الشات الجانبي --- */
         .chat-toggle-btn {
             position: fixed;
             bottom: 20px;
@@ -207,7 +202,6 @@
             height: 100%;
             background: rgba(15, 12, 32, 0.98);
             border-right: 1px solid var(--primary);
-            box-shadow: 5px 0 25px rgba(0,0,0,0.7);
             transition: left 0.3s ease;
             z-index: 100;
             display: flex;
@@ -250,18 +244,14 @@
 </head>
 <body>
 
-    <!-- زر فتح الشات الجانبي -->
-    <button class="chat-toggle-btn" onclick="toggleChat()">💬 الشات الجماعي</button>
+    <button class="chat-toggle-btn" onclick="toggleChat()">💬 الشات</button>
 
-    <!-- لوحة الشات الجانبية -->
     <div class="side-chat" id="side-chat">
         <div class="chat-header">
             <h4 style="margin:0; color:#00cec9;">دردشة الغرفة 💬</h4>
             <button onclick="toggleChat()" style="width:auto; padding:3px 10px; margin:0; background:var(--danger);">✕</button>
         </div>
-        <div class="chat-box" id="chat-box">
-            <small style="color: #aaa; text-align: center;">مرحباً بكم في المحادثة!</small>
-        </div>
+        <div class="chat-box" id="chat-box"></div>
         <div style="display:flex; gap:5px;">
             <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
             <button onclick="sendChatMessage()" style="width:auto; padding:8px 15px; margin:0;">إرسال</button>
@@ -272,34 +262,32 @@
         <h1>🎲 كوكتيل الفعاليات الجماعية 🎤</h1>
 
         <div id="login-screen" class="screen active">
-            <input type="text" id="username" placeholder="اكتب اسمك هنا...">
+            <input type="text" id="username" placeholder="اكتب اسمك هنا..." maxlength="15">
             <button onclick="saveName()">التالي 🚀</button>
         </div>
 
         <div id="room-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
-            <input type="number" id="room-code" placeholder="أدخل كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
-            <button onclick="joinGameRoom()">دخول الغرفة الجماعية 🔗</button>
+            <input type="number" id="room-code" placeholder="كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
+            <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
             <p id="status-msg" style="color:#a29bfe; font-size:14px; margin-top:10px;"></p>
         </div>
 
         <div id="game-screen" class="screen">
-            <button class="shop-btn-top" onclick="toggleShop(true)">🛒 متجر الفعاليات (نقاطك: <span id="my-score-display">0</span>)</button>
+            <div class="controls-top">
+                <button id="mic-btn" class="mic-btn" onclick="toggleMic()">🎙️ المايك الجماعي: موقوف</button>
+            </div>
 
             <div class="leaderboard-box" id="leaderboard"></div>
 
-            <button id="roll-btn" onclick="rollTurn()">🎲 سحب فعالية جديدة للجميع!</button>
+            <button id="roll-btn" onclick="rollTurn()">🎲 سحب فعالية جديدة!</button>
 
-            <div class="turn-box" id="turn-display">في انتظار سحب الفعالية...</div>
+            <div id="turn-display" style="font-size:14px; color:#00cec9; margin:6px 0;">في انتظار سحب الفعالية...</div>
 
             <div id="activity-card" style="display:none;">
                 <span class="q-type-badge" id="q-badge">فعالية</span>
                 <div class="q-box" id="question-text"></div>
 
-                <!-- للفعاليات الصوتية -->
-                <button id="audio-play-btn" style="display:none; background:#00b894; margin-bottom:10px;" onclick="playMelody()">🎵 تشغيل اللحن / المقطع</button>
-
-                <!-- خيارات متعدّدة -->
                 <div class="options-grid" id="options-container" style="display:none;">
                     <button class="opt-btn" onclick="checkAnswer(0)"></button>
                     <button class="opt-btn" onclick="checkAnswer(1)"></button>
@@ -307,48 +295,42 @@
                     <button class="opt-btn" onclick="checkAnswer(3)"></button>
                 </div>
 
-                <!-- إدخال كتابي (للكلمات والأغاني) -->
                 <div class="text-answer-group" id="text-input-container" style="display:none;">
-                    <input type="text" id="text-answer-input" placeholder="اكتب إجابتك هنا...">
+                    <input type="text" id="text-answer-input" placeholder="اكتب الإجابة هنا..." maxlength="50">
                     <button onclick="checkTextAnswer()" style="width:auto; padding:8px 20px;">تأكيد 🎯</button>
                 </div>
             </div>
 
             <div class="feedback-msg" id="feedback-text"></div>
         </div>
-
-        <!-- نافذة المتجر -->
-        <div class="shop-modal" id="shop-modal">
-            <h3 style="color:#fdcb6e;">🛒 متجر الميزات</h3>
-            <div class="shop-item">
-                <span>💡 حجب خيارين خاطئين</span>
-                <button onclick="buyItem('5050', 2)" style="width:auto; padding:5px 12px; margin:0;">2 نقاط</button>
-            </div>
-            <div class="shop-item">
-                <span>🔥 مضاعف النقاط (x2)</span>
-                <button onclick="buyItem('double', 3)" style="width:auto; padding:5px 12px; margin:0;">3 نقاط</button>
-            </div>
-            <button onclick="toggleShop(false)" style="background:var(--danger); margin-top:15px;">إغلاق المتجر</button>
-        </div>
     </div>
 
+    <!-- الصوت المباشر (WebRTC Audio) -->
+    <audio id="remote-audio" autoplay></audio>
+
     <script>
-        // كوكتيل الفعاليات المتنوعة
+        // --- دالة حماية من الـ XSS (Sanitization) ---
+        function sanitize(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+
+        // --- بنك فعاليات الديسكورد والجمل المبعثرة ---
         const eventsData = [
-            // 1. خيارات متعددة
-            { type: "ثقافة عامة 🧠", q: "ما هو الحيوان الذي لا ينام منذ ولادته حتى موته؟", options: ["القرش", "الضفدع الثوري", "النملة", "الظبي"], correct: 1 },
+            // أسئلة ديسكورد وأعضاء
+            { type: "تحدي الديسكورد 🤖", q: "ما هو البوت الخاص بإدارة الرتب والترحيب والشائعة استخدامه؟", options: ["ProBot", "Carl-bot", "Rythm", "Mee6"], correct: 0 },
+            { type: "تحدي الديسكورد 👑", q: "ما هي الرتبة التي تملك كامل الصلاحيات في السيرفر؟", options: ["Moderator", "Administrator", "VIP", "Member"], correct: 1 },
+            { type: "تحدي الديسكورد 💬", q: "ما هو الاختصار المستخدم لطرد عضو مؤقتاً بالديسكورد؟", options: ["/ban", "/timeout", "/kick", "/warn"], correct: 2 },
             
-            // 2. إكمال كلمات أغنية / لحن
-            { type: "تخمين كلمات أغنية 🎤", q: "أكمل الكلمات التالية: 'ما زال ما زال...'", mode: "text", correctText: "عشقي ليك ما زال" },
-            
-            // 3. ترتيب / فك تشفير الكلمة
-            { type: "فك تشفير الكلمة 🧩", q: "رتب الحروف التالية لتكون اسم دولة عربية: ( ر - ا - ز - ج - ا - ئ )", mode: "text", correctText: "الجزائر" },
+            // ترتيب جمل مبعثرة
+            { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( السيرفر / في / أهلاً / بكم )", mode: "text", correctText: "أهلا بكم في السيرفر" },
+            { type: "ترتيب الجملة 🧩", q: "رتب الكلمات التالية: ( التحدي / اليوم / ينطلق / أقوى )", mode: "text", correctText: "ينطلق أقوى التحدي اليوم" },
 
-            // 4. لحن نغمات (صوتي)
-            { type: "تخمين اللحن 🎵", q: "استمع للحن واكتب اسم الأغنية / الكرتون!", mode: "audioText", melody: [261, 293, 329, 349, 392], correctText: "سبيستون" },
-
-            // 5. أسئلة سريعة
-            { type: "سؤال سريع ⚡", q: "شيء كلما أخذت منه كبر؟", options: ["الحفرة", "العمر", "المال", "العلم"], correct: 0 }
+            // جمل معكوسة (عكس الكلمات)
+            { type: "فك الجملة المعكوسة 🔄", q: "اقرأ الجملة واكتبها بالشكل الصحيح: 'رباطسإ سركيسد'", mode: "text", correctText: "إسباطر ديسكورد" },
+            { type: "فك الجملة المعكوسة 🔄", q: "اكتب الجملة بالترتيب الصحيح: 'ديكوا طاشن'", mode: "text", correctText: "نشاط أكيد" }
         ];
 
         let client = null;
@@ -358,21 +340,26 @@
         let players = {};
         let currentEvent = null;
         let hasAnsweredCurrent = false;
-        let scoreMultiplier = 1;
+
+        // متغيرات المايك الجماعي (WebRTC)
+        let localStream = null;
+        let isMicOn = false;
+        let lastMsgTime = 0; // حماية ضد الحرق والسبام
 
         function saveName() {
-            myName = document.getElementById('username').value.trim();
-            if(!myName) return alert("يرجى كتابة اسمك أولاً!");
+            const rawName = document.getElementById('username').value.trim();
+            myName = sanitize(rawName);
+            if(!myName) return alert("يرجى كتابة اسم صحيح!");
             document.getElementById('player-name-display').innerText = myName;
             showScreen('room-screen');
         }
 
         function joinGameRoom() {
             const code = document.getElementById('room-code').value.trim();
-            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام!");
+            if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
 
-            document.getElementById('status-msg').innerText = "جاري الاتصال بالنظام الجماعي...";
-            roomTopic = "ayoub_cocktail_room_" + code;
+            document.getElementById('status-msg').innerText = "جاري الاتصال...";
+            roomTopic = "ayoub_discord_room_" + code;
 
             client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
@@ -387,29 +374,38 @@
             });
 
             client.on('message', (topic, message) => {
-                const data = JSON.parse(message.toString());
-                if(data.senderId !== myId) handleData(data);
+                try {
+                    const data = JSON.parse(message.toString());
+                    if(data.senderId !== myId) handleData(data);
+                } catch(e) { console.error("Invalid Payload"); }
             });
         }
 
         function broadcastData(data) {
+            // Anti-Spam protection
+            const now = Date.now();
+            if (now - lastMsgTime < 150 && data.type === 'chat') return; 
+            lastMsgTime = now;
+
             data.senderId = myId;
             if(client) client.publish(roomTopic, JSON.stringify(data));
         }
 
         function handleData(data) {
+            const safeName = sanitize(data.name || data.senderName || '');
+            
             if(data.type === 'join') {
-                players[data.senderId] = { name: data.name, score: data.score };
+                players[data.senderId] = { name: safeName, score: data.score };
                 updateUI();
-                appendChatMessage("النظام", `انضم ${data.name} للفعاليات! 🎉`, 'other');
+                appendChatMessage("النظام", `انضم ${safeName} للغرفة! 🎉`, 'other');
                 broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score });
             } 
             else if(data.type === 'sync-player') {
-                players[data.senderId] = { name: data.name, score: data.score };
+                players[data.senderId] = { name: safeName, score: data.score };
                 updateUI();
             }
             else if(data.type === 'roll') {
-                displayEvent(data.eIndex, data.starterName);
+                displayEvent(data.eIndex, safeName);
             } 
             else if(data.type === 'score-update') {
                 if(players[data.senderId]) {
@@ -418,21 +414,21 @@
                 }
             } 
             else if(data.type === 'chat') {
-                appendChatMessage(data.senderName, data.text, 'other');
+                appendChatMessage(safeName, sanitize(data.text), 'other');
             }
         }
 
         function rollTurn() {
             const eIndex = Math.floor(Math.random() * eventsData.length);
             displayEvent(eIndex, myName);
-            broadcastData({ type: 'roll', eIndex: eIndex, starterName: myName });
+            broadcastData({ type: 'roll', eIndex: eIndex, name: myName });
         }
 
         function displayEvent(eIndex, starterName) {
             currentEvent = eventsData[eIndex];
             hasAnsweredCurrent = false;
 
-            document.getElementById('turn-display').innerText = `🎲 الفعالية سحبها: ${starterName}!`;
+            document.getElementById('turn-display').innerText = `🎲 الفعالية سحبها: ${starterName}`;
             document.getElementById('activity-card').style.display = 'block';
             document.getElementById('q-badge').innerText = currentEvent.type;
             document.getElementById('question-text').innerText = currentEvent.q;
@@ -440,23 +436,19 @@
 
             const optGrid = document.getElementById('options-container');
             const textGroup = document.getElementById('text-input-container');
-            const audioBtn = document.getElementById('audio-play-btn');
 
             optGrid.style.display = 'none';
             textGroup.style.display = 'none';
-            audioBtn.style.display = 'none';
 
-            if(currentEvent.mode === 'text' || currentEvent.mode === 'audioText') {
+            if(currentEvent.mode === 'text') {
                 textGroup.style.display = 'flex';
                 document.getElementById('text-answer-input').value = '';
-                if(currentEvent.mode === 'audioText') audioBtn.style.display = 'block';
             } else {
                 optGrid.style.display = 'grid';
                 const optButtons = document.querySelectorAll('.opt-btn');
                 currentEvent.options.forEach((opt, idx) => {
                     optButtons[idx].innerText = opt;
                     optButtons[idx].disabled = false;
-                    optButtons[idx].style.display = 'block';
                 });
             }
 
@@ -473,7 +465,7 @@
 
         function checkTextAnswer() {
             if(hasAnsweredCurrent) return;
-            const userAns = document.getElementById('text-answer-input').value.trim();
+            const userAns = sanitize(document.getElementById('text-answer-input').value.trim());
             if(!userAns) return;
 
             hasAnsweredCurrent = true;
@@ -483,76 +475,50 @@
 
         function processResult(isCorrect, correctAnsText) {
             if(isCorrect) {
-                const pointsGained = 1 * scoreMultiplier;
-                players[myId].score += pointsGained;
-                showFeedback(`إجابة صحيحة ممتاز! 🎉 (+${pointsGained} نقاط)`, true);
+                players[myId].score += 1;
+                showFeedback(`إجابة صحيحة ممتاز! 🎉`, true);
             } else {
                 players[myId].score = Math.max(0, players[myId].score - 1);
-                showFeedback(`إجابة خاطئة! ❌ الإجابة هي: (${correctAnsText})`, false);
+                showFeedback(`خاطئة! ❌ الإجابة الصحيحة: (${correctAnsText})`, false);
             }
 
-            scoreMultiplier = 1; // إعادة تعيين المضاعف
             updateUI();
-
             document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
             document.getElementById('roll-btn').style.display = 'block';
 
             broadcastData({ type: 'score-update', newScore: players[myId].score });
         }
 
-        // تشغيل النغمات الموسيقية
-        function playMelody() {
-            if(!currentEvent.melody) return;
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            currentEvent.melody.forEach((freq, idx) => {
-                setTimeout(() => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.freq.value = freq;
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4);
-                }, idx * 300);
-            });
-        }
-
-        // المتجر
-        function toggleShop(open) {
-            document.getElementById('shop-modal').style.display = open ? 'flex' : 'none';
-        }
-
-        function buyItem(item, cost) {
-            if(players[myId].score < cost) return alert("ليس لديك نقاط كافية!");
-            
-            players[myId].score -= cost;
-            if(item === '5050' && currentEvent && currentEvent.options) {
-                let removed = 0;
-                const buttons = document.querySelectorAll('.opt-btn');
-                buttons.forEach((btn, idx) => {
-                    if(idx !== currentEvent.correct && removed < 2) {
-                        btn.style.display = 'none';
-                        removed++;
-                    }
-                });
-                alert("تم حذف إجابتين خاطئتين!");
-            } else if(item === 'double') {
-                scoreMultiplier = 2;
-                alert("تم تفعيل مضاعف النقاط للفعالية القادمة! (x2)");
+        // --- المايك الجماعي (Voice Chat) ---
+        async function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            if(!isMicOn) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    isMicOn = true;
+                    btn.classList.add('active-mic');
+                    btn.innerText = "🎙️ المايك الجماعي: شغال 🟢";
+                } catch(err) {
+                    alert("يرجى إعطاء صلاحية المايك في المتصفح!");
+                }
+            } else {
+                if(localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+                isMicOn = false;
+                btn.classList.remove('active-mic');
+                btn.innerText = "🎙️ المايك الجماعي: موقوف 🔴";
             }
-            updateUI();
-            toggleShop(false);
-            broadcastData({ type: 'score-update', newScore: players[myId].score });
         }
 
-        /* --- الشات الجانبي --- */
+        // --- الشات الجانبي ---
         function toggleChat() {
             document.getElementById('side-chat').classList.toggle('open');
         }
 
         function sendChatMessage() {
             const input = document.getElementById('chat-input');
-            const text = input.value.trim();
+            const text = sanitize(input.value.trim());
             if(!text) return;
 
             appendChatMessage('أنت', text, 'me');
@@ -578,7 +544,6 @@
         }
 
         function updateUI() {
-            document.getElementById('my-score-display').innerText = players[myId] ? players[myId].score : 0;
             const box = document.getElementById('leaderboard');
             box.innerHTML = '';
 
