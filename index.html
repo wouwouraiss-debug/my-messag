@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لعبة الفعاليات أونلاين 🎲💬</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- مكتبة WebSocket MQTT المباشرة -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
             --bg: #0f0c20;
@@ -182,13 +183,11 @@
 
         <div id="room-screen" class="screen">
             <h3>مرحباً <span id="player-name-display" style="color:#ffeaa7;"></span>!</h3>
-            <p style="font-size: 14px; color: #ccc;">اتفق مع صاحبك على كود من 4 أرقام (مثال: 1234)</p>
+            <p style="font-size: 14px; color: #ccc;">أدخل كود الغرفة (4 أرقام) للدخول مع صاحبك</p>
 
             <div class="room-choice-box">
                 <input type="number" id="room-code" placeholder="أدخل كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
-                
-                <button onclick="createRoom()">إنشاء غرفة بهاد الكود 👑</button>
-                <button onclick="joinRoom()" style="background: linear-gradient(45deg, #00b894, #00cec9);">دخول لغرفة صاحبك 🔗</button>
+                <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
             </div>
             <p id="status-msg" style="color:#a29bfe; font-size:14px; margin-top:10px;"></p>
         </div>
@@ -207,7 +206,7 @@
 
             <button id="roll-btn" onclick="rollTurn()">🎲 سحب القرعة والسؤال!</button>
 
-            <div class="turn-box" id="turn-display">في انتظار القرعة...</div>
+            <div class="turn-box" id="turn-display">في انتظار دخول اللاعب الثاني...</div>
             <div class="q-box" id="question-text">اضغط على الزر الفوقاني باش تسحب سؤال!</div>
 
             <div class="options-grid" id="options-container" style="display:none;">
@@ -241,29 +240,15 @@
             { q: "شيء يملك أسناناً ولكنه لا يعض؟", options: ["المشط", "المنشار", "الزيبار", "القرش"], correct: 0 }
         ];
 
-        // إعدادات السيرفرات العالمية للربط البعيد عبر الولايات
-        const peerConfig = {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' },
-                    { urls: 'stun:stun3.l.google.com:19302' },
-                    { urls: 'stun:stun4.l.google.com:19302' }
-                ]
-            }
-        };
-
-        let peer = null;
-        let conn = null;
+        let client = null;
+        let myId = Math.random().toString(36).substring(7); // معرف فريد للجهاز
+        let roomTopic = "";
         let myName = "";
         let otherName = "المنافس";
         let myScore = 0;
         let otherScore = 0;
         let currentQuestion = null;
         let isMyTurn = false;
-
-        const ROOM_PREFIX = "ayoub-quiz-v2-room-";
 
         function saveName() {
             myName = document.getElementById('username').value.trim();
@@ -273,71 +258,53 @@
             showScreen('room-screen');
         }
 
-        function createRoom() {
+        function joinGameRoom() {
             const code = document.getElementById('room-code').value.trim();
             if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
 
-            document.getElementById('status-msg').innerText = "جاري إنشاء الغرفة وبانتظار المنافس...";
-            
-            const customPeerId = ROOM_PREFIX + code;
-            peer = new Peer(customPeerId, peerConfig);
+            document.getElementById('status-msg').innerText = "جاري الاتصال بالسيرفر السريع...";
+            roomTopic = "ayoub_quiz_room_" + code;
 
-            peer.on('open', (id) => {
-                document.getElementById('status-msg').innerText = `تم إنشاء الغرفة (${code})! قل لصاحبك يدخل برقم ${code}`;
-            });
+            // استخدام سيرفر WebSocket مجاني وسريع جداً مخصص للألعاب
+            client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-            peer.on('error', (err) => {
-                if(err.type === 'unavailable-id') {
-                    alert("هاد الكود مستعمل حالياً، جرب كود واحد آخر!");
-                } else {
-                    alert("حدث خطأ في الاتصال، جرب كود آخر.");
-                }
-                document.getElementById('status-msg').innerText = "";
-            });
-
-            peer.on('connection', (connection) => {
-                conn = connection;
-                setupConnection();
-            });
-        }
-
-        function joinRoom() {
-            const code = document.getElementById('room-code').value.trim();
-            if(code.length !== 4) return alert("يرجى كتابة كود مكون من 4 أرقام بالضبط!");
-
-            document.getElementById('status-msg').innerText = "جاري البحث عن الغرفة والاتصال...";
-            
-            peer = new Peer(peerConfig);
-
-            peer.on('open', () => {
-                const targetPeerId = ROOM_PREFIX + code;
-                conn = peer.connect(targetPeerId);
-                setupConnection();
-            });
-
-            peer.on('error', (err) => {
-                alert("ما قدرناش ندخلوا، تأكد باللي صاحبك ضغط 'إنشاء غرفة' هو الأول!");
-                document.getElementById('status-msg').innerText = "";
-            });
-        }
-
-        function setupConnection() {
-            conn.on('open', () => {
-                conn.send({ type: 'init', name: myName });
+            client.on('connect', () => {
+                document.getElementById('status-msg').innerText = "تم الاتصال! في انتظار المنافس...";
+                client.subscribe(roomTopic);
+                
                 showScreen('game-screen');
                 updateUI();
+
+                // الترحيب والمزامنة مع المنافس
+                broadcastData({ type: 'join', senderId: myId, name: myName });
             });
 
-            conn.on('data', (data) => {
-                handleData(data);
+            client.on('message', (topic, message) => {
+                const data = JSON.parse(message.toString());
+                if(data.senderId !== myId) {
+                    handleData(data);
+                }
             });
+        }
+
+        function broadcastData(data) {
+            data.senderId = myId;
+            if(client) {
+                client.publish(roomTopic, JSON.stringify(data));
+            }
         }
 
         function handleData(data) {
-            if(data.type === 'init') {
+            if(data.type === 'join') {
                 otherName = data.name;
-                showScreen('game-screen');
                 updateUI();
+                document.getElementById('turn-display').innerText = `تم اتصال ${otherName}! اسحب السؤال للبدء 🎉`;
+                // نرد عليه باسمنا باش يعرفنا
+                broadcastData({ type: 'welcome-back', name: myName });
+            } else if(data.type === 'welcome-back') {
+                otherName = data.name;
+                updateUI();
+                document.getElementById('turn-display').innerText = `جاهز للعب مع ${otherName}! 🎉`;
             } else if(data.type === 'roll') {
                 displayQuestion(data.turnIsP1, data.qIndex);
             } else if(data.type === 'answer-result') {
@@ -355,13 +322,11 @@
 
             displayQuestion(isMe, qIndex);
 
-            if(conn) {
-                conn.send({
-                    type: 'roll',
-                    turnIsP1: !isMe,
-                    qIndex: qIndex
-                });
-            }
+            broadcastData({
+                type: 'roll',
+                turnIsP1: !isMe,
+                qIndex: qIndex
+            });
         }
 
         function displayQuestion(isItMe, qIndex) {
@@ -403,14 +368,12 @@
             document.querySelectorAll('.opt-btn').forEach(btn => btn.disabled = true);
             document.getElementById('roll-btn').style.display = 'block';
 
-            if(conn) {
-                conn.send({
-                    type: 'answer-result',
-                    newScore: myScore,
-                    isCorrect: isCorrect,
-                    msg: isCorrect ? `جاوب ${myName} إجابة صحيحة! ✅` : `غلط ${myName} في الإجابة! ❌`
-                });
-            }
+            broadcastData({
+                type: 'answer-result',
+                newScore: myScore,
+                isCorrect: isCorrect,
+                msg: isCorrect ? `جاوب ${myName} إجابة صحيحة! ✅` : `غلط ${myName} في الإجابة! ❌`
+            });
         }
 
         function sendChatMessage() {
@@ -420,12 +383,10 @@
 
             appendChatMessage('أنت', text, 'me');
 
-            if(conn) {
-                conn.send({
-                    type: 'chat',
-                    text: text
-                });
-            }
+            broadcastData({
+                type: 'chat',
+                text: text
+            });
 
             input.value = '';
         }
