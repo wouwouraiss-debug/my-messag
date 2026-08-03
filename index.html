@@ -1,233 +1,694 @@
-<!DOCTYPE html>
+! <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>Secret Love ❤️</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كوكتيل الفعاليات الجماعية 🎲🎤</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --bg-glass: rgba(12, 3, 10, 0.85);
+            --card-border: rgba(255, 30, 80, 0.45);
+            --primary: #e60039;
+            --primary-glow: #ff1a53;
+            --accent: #ff3366;
+            --success: #00e676;
+            --danger: #ff1744;
+            --text-color: #ffffff;
+        }
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            direction: rtl;
+            overflow: hidden;
+            background-color: #121212;
+        }
 
-body{
-height:100vh;
-overflow:hidden;
-/* دمج الصورة اللي أرسلتها مباشرة داخل الكود */
-background: 
-    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), 
-    url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0HystGy0yMjM0NDT/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjT/wAARCADIASwDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBhExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqrO0t7i5usLDxMXGx8jJytLT1NXW19jZ2uHa8/9oADAMBAAIRAxEAPwDyP+0Jv84o/tCb/OKq0UWzW5OVFn+0Jv84o/tCb/OKq1BLLHCu6WRY1HdiAKy/EHiTSdE8P3Ws3V5EtpBCZmcPlWAHQe56AetZuUF8TX3jSb2Ln9oTf5xR/aE3+cV514Y+N3h3W9NmuNQ/wCJTPHOYvKmmUsy4BDjntkZ/Gu20bxRpGu3F7b6ZfR3Eto+yZVPKms1VhLZlxptbo0v7Qm/wAoqNrmV1KtI7K3JBYkGiit5e87voTFqKt+f+Z//9k=');
-background-size: cover;
-background-position: center;
-font-family: 'Cairo', sans-serif;
-color: white;
-display: flex;
-align-items: center;
-justify-content: center;
-}
+        /* --- خلفية الفيديو المصغرة والمركزة كما اتفقنا --- */
+        #bg-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 70%;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            object-fit: cover;
+            filter: brightness(0.6) contrast(1.1);
+        }
 
-.box{
-text-align:center;
-z-index:2;
-animation:show 2s;
-padding: 20px;
-}
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+            pointer-events: none;
+        }
 
-@keyframes show{
-from{opacity:0;transform:scale(.5);}
-to{opacity:1;transform:scale(1);}
-}
+        .container {
+            background: var(--bg-glass);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 1;
+        }
 
-#count{
-font-size:90px;
-color:#ff94b8;
-text-shadow: 0 0 20px rgba(255, 148, 184, 0.6);
-}
+        h1 {
+            color: #ff4d79;
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 14px;
+        }
 
-.star{
-font-size:100px;
-cursor:pointer;
-animation:float 2s infinite;
-filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
-}
+        input, button {
+            width: 100%;
+            padding: 10px 14px;
+            margin: 6px 0;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
 
-@keyframes float{
-50%{transform:translateY(-20px);}
-}
+        input {
+            background: rgba(10, 2, 6, 0.8);
+            color: white;
+            border: 1px solid var(--primary);
+            text-align: center;
+        }
 
-.heart{
-font-size:120px;
-animation:beat 1s infinite;
-filter:drop-shadow(0 0 30px #ff3b7a);
-}
+        button {
+            background: linear-gradient(45deg, var(--primary), #b3002d);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-@keyframes beat{
-50%{transform:scale(1.2);}
-}
+        button:hover {
+            opacity: 0.9;
+        }
 
-.name{
-font-size:38px;
-color:#ff94b8;
-text-shadow:0 0 25px rgba(255, 148, 184, 0.8);
-margin-top: 10px;
-}
+        .screen { display: none; }
+        .active { display: block; }
 
-.text{
-font-size:20px;
-line-height:2.2;
-margin-top:20px;
-text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
+        .bottom-floating-btns {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 99;
+        }
 
-button{
-margin-top:30px;
-padding:15px 35px;
-border:0;
-border-radius:30px;
-background:#ff3b7a;
-color:white;
-font-size:18px;
-cursor:pointer;
-box-shadow: 0 5px 20px rgba(255, 59, 122, 0.5);
-transition: 0.3s;
-font-family: 'Cairo', sans-serif;
-}
+        .icon-btn {
+            width: 45px !important;
+            height: 45px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            background: #e60039;
+        }
 
-button:hover {
-transform: scale(1.05);
-background: #ff528b;
-}
+        .icon-btn.mic-off { background: #333; }
+        .icon-btn.mic-on { background: var(--success); }
 
-.fly{
-position:absolute;
-animation:up 4s linear;
-}
+        .leaderboard-box {
+            background: rgba(10, 2, 6, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 8px;
+            margin-bottom: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
 
-@keyframes up{
-to{
-transform:translateY(-100vh);
-opacity:0;
-}
-}
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            margin: 3px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            font-size: 13px;
+        }
 
-.final{
-text-align:center;
-animation:show 3s;
-padding: 20px;
-}
+        .player-row.me {
+            border: 1px solid var(--accent);
+            background: rgba(255, 51, 102, 0.2);
+        }
 
-.final p{
-font-size:22px;
-line-height:2.3;
-text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-}
+        .q-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--primary);
+            margin-bottom: 8px;
+        }
 
-</style>
+        .q-box {
+            background: rgba(20, 3, 10, 0.9);
+            border-right: 3px solid var(--primary-glow);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .opt-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px 6px;
+            color: white;
+            font-size: 13px;
+        }
+
+        .opt-btn:hover {
+            background: rgba(230, 0, 57, 0.4);
+        }
+
+        .text-answer-group {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 8px;
+            height: 35px;
+        }
+
+        .side-chat {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background: rgba(10, 2, 6, 0.95);
+            border-right: 1px solid var(--primary);
+            transition: left 0.3s ease;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+        }
+
+        .side-chat.open { left: 0; }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: right;
+        }
+
+        .chat-msg {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div id="app" class="box">
-<h2>اصبري كاين سر صغير يستنى فيك تحت النجوم ✨</h2>
-<div id="count">3</div>
-</div>
+    <!-- فيديو الخلفية المركز والمحدد بـ 70% -->
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="video.mp4" type="video/mp4">
+        متصفحك لا يدعم عرض الفيديو.
+    </video>
+    <div class="video-overlay"></div>
 
+    <div class="bottom-floating-btns" id="game-controls" style="display:none;">
+        <button id="mic-btn" class="icon-btn mic-off" onclick="toggleMic()" title="المايك">🎙️</button>
+        <button class="icon-btn" onclick="toggleChat()" title="الشات">💬</button>
+    </div>
 
-<script>
-// العد التنازلي
-let n=3;
+    <div class="side-chat" id="side-chat">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:8px;">
+            <h4 style="margin:0; color:#ff4d79;">الدردشة</h4>
+            <button onclick="toggleChat()" style="width:auto; padding:2px 8px; margin:0; background:var(--danger);">✕</button>
+        </div>
+        <div class="chat-box" id="chat-box"></div>
+        <div style="display:flex; gap:4px;">
+            <input type="text" id="chat-input" placeholder="اكتب رسالة..." onkeypress="handleChatKey(event)">
+            <button onclick="sendChatMessage()" style="width:auto; padding:6px 12px; margin:0;">إرسال</button>
+        </div>
+    </div>
 
-let timer=setInterval(()=>{
+    <div class="container">
+        <h1>🎲 كوكتيل الفعاليات الجماعية 🎤</h1>
 
-n--;
-document.getElementById("count").innerHTML=n;
+        <div id="login-screen" class="screen active">
+            <input type="text" id="username" placeholder="اكتب اسمك هنا..." maxlength="15">
+            <button onclick="saveName()">التالي 🚀</button>
+        </div>
 
-if(n==0){
+        <div id="room-screen" class="screen">
+            <h3>مرحباً <span id="player-name-display" style="color:#ff809f;"></span>!</h3>
+            <input type="number" id="room-code" placeholder="كود الغرفة (4 أرقام)" maxlength="4" oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);">
+            <button onclick="joinGameRoom()">دخول الغرفة 🔗</button>
+            <p id="status-msg" style="color:#ff809f; font-size:13px; margin-top:8px;"></p>
+        </div>
 
-clearInterval(timer);
+        <div id="game-screen" class="screen">
+            <div class="leaderboard-box" id="leaderboard"></div>
 
-app.innerHTML=`
-<div class="star" onclick="firstGift()">⭐</div>
-<p style="text-shadow: 0 2px 5px rgba(0,0,0,0.9); font-size: 20px; margin-top: 15px;">المفتاح راه هنا... اضغطي على النجمة</p>
-`;
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span id="turn-display" style="font-size:13px; font-weight:bold; color:#ff4d79;">انتظار الدور...</span>
+                <span id="timer-badge" style="background:#333; padding:2px 8px; border-radius:6px; font-size:12px; color:#ffc107;">⏱️ 20s</span>
+            </div>
 
-}
+            <button id="roll-btn" onclick="rollTurn()" style="display:none;">🎲 سحب سؤال جديد</button>
 
-},1000);
+            <div id="activity-card" style="display:none;">
+                <span class="q-type-badge" id="q-badge">فعالية</span>
+                <div class="q-box" id="question-text"></div>
 
+                <div id="audio-player-box" style="display:none;">
+                    <audio id="song-audio" controls></audio>
+                </div>
 
-// المفاجأة الأولى
-function firstGift(){
+                <div class="options-grid" id="options-container" style="display:none;">
+                    <button class="opt-btn" onclick="checkAnswer(0)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(1)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(2)"></button>
+                    <button class="opt-btn" onclick="checkAnswer(3)"></button>
+                </div>
 
-app.innerHTML=`
+                <div class="text-answer-group" id="text-input-container" style="display:none;">
+                    <input type="text" id="text-answer-input" placeholder="اكتب الإجابة (أقل من 20 ثانية)..." maxlength="50">
+                    <button onclick="checkTextAnswer()" style="width:auto; padding:6px 15px;">تأكيد 🎯</button>
+                </div>
+            </div>
 
-<div class="heart">❤️</div>
+            <div id="feedback-text" style="font-size:13px; font-weight:bold; margin:6px 0; min-height:18px;"></div>
+        </div>
+    </div>
 
-<div class="name">
-يا أجمل صدفة في حياتي ✨
-</div>
+    <div id="audio-container"></div>
 
-<div class="text">
-والله العظيم غير كي تدخل للدنيا وتلقى شخص يغيرلك طابع أيامك، تحس بلي الدنيا مزال فيها الخير.<br>
-نهار شفتك، ما كنتش نعرف بلي هذاك النهار راح يكون نقطة تحول وينسيني في كل تعب عدى عليا ❤️
-</div>
+    <script>
+        function sanitize(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
 
+        const initialEventsData = [
+            { id: 1, type: "أسئلة حب وهضرة ❤️", q: "من هي حب ناروتو الأول والأبدي التي تزوجها؟", options: ["إينو", "هيناتا", "كوشينا", "أكاني"], correct: 1 },
+            { id: 2, type: "أسئلة حب وهضرة ❤️", q: "من هي زوجة ميناتو وأم ناروتو ذات الشعر الأحمر؟", options: ["كوشينا", "إينو", "أكاني", "تسونادي"], correct: 0 },
+            { id: 3, type: "أسئلة حب وهضرة ❤️", q: "من هو العضو المقرب لـ ساسوري في الأكاتسكي؟", options: ["وسيم", "ديدارا", "حسين", "مادارا"], correct: 1 },
+            { id: 4, type: "أغاني ومقاطع قصيرة (أقل من 20 ثانية) 🎧", q: "استمع للمقطع الصوتي القصير واعرف اسم الكرتون:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", mode: "text", correctText: "سبيستون" },
+            { id: 5, type: "أغاني ومقاطع قصيرة (أقل من 20 ثانية) 🎧", q: "اسمع المقطع القصير واكتب اسم الأغنية:", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", mode: "text", correctText: "أبطال الديجيتال" }
+        ];
 
-<button onclick="secondGift()">
-كملي اقراي... 💌
-</button>
+        let availableEvents = [...initialEventsData];
+        let client = null;
+        let peer = null;
+        let myId = Math.random().toString(36).substring(7);
+        let roomTopic = "";
+        let myName = "";
+        let players = {};
+        let currentEvent = null;
+        let currentTurnPlayerId = "";
+        let turnTimer = null;
+        let timeLeft = 20;
 
-`;
+        let localAudioStream = null;
+        let isMicOn = false;
 
-}
+        function saveName() {
+            const rawName = document.getElementById('username').value.trim();
+            myName = sanitize(rawName);
+            if(!myName) return alert("يرجى كتابة اسم صحيح!");
+            document.getElementById('player-name-display').innerText = myName;
+            showScreen('room-screen');
+        }
 
+        function joinGameRoom() {
+            const code = document.getElementById('room-code').value.trim();
+            if(code.length !== 4) return alert("أدخل كود 4 أرقام!");
 
+            document.getElementById('status-msg').innerText = "جاري الاتصال باللعبة...";
+            roomTopic = "ayoub_cocktail_room_" + code;
 
-// المفاجأة الثانية
-function secondGift(){
+            peer = new Peer(myId + "_" + code);
 
-document.body.innerHTML=`
+            peer.on('open', () => {
+                client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
 
-<div class="final">
+                client.on('connect', () => {
+                    client.subscribe(roomTopic);
+                    showScreen('game-screen');
+                    document.getElementById('game-controls').style.display = 'flex';
 
-<div style="font-size: 70px; margin-bottom: 15px;">❤️✨</div>
+                    players[myId] = { name: myName, score: 0, peerId: peer.id };
+                    updateUI();
 
-<p>
-إذا قبلتِ تكوني شريكة عمري ومرتي وحبيبتي... ❤️<br><br>
+                    broadcastData({ type: 'join', senderId: myId, name: myName, score: 0, peerId: peer.id });
+                    
+                    // إذا كان أول لاعب يقدر يبدأ السحب
+                    if(Object.keys(players).length === 1) {
+                        document.getElementById('roll-btn').style.display = 'block';
+                    }
+                });
 
-نعدك بلي نبقى ديما السند اللي تميلي عليه كي تغلبك الدنيا،<br>
-والنور اللي يضوي عتمة أيامك، والضحكة اللي ما تفارقش وجهك خلاص ✨<br><br>
+                client.on('message', (topic, message) => {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        if(data.senderId !== myId) handleData(data);
+                    } catch(e) {}
+                });
+            });
 
-هذه غير البداية، وبيناتنا عمر كامل مكتوب بالهنا والحب الصافي 💙
-</p>
+            peer.on('call', (call) => {
+                call.answer(localAudioStream);
+                call.on('stream', (remoteStream) => {
+                    addAudioStream(call.peer, remoteStream);
+                });
+            });
+        }
 
-</div>
+        function broadcastData(data) {
+            data.senderId = myId;
+            if(client) client.publish(roomTopic, JSON.stringify(data));
+        }
 
-`;
+        function handleData(data) {
+            const safeName = sanitize(data.name || data.senderName || '');
+            
+            if(data.type === 'join') {
+                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
+                updateUI();
+                broadcastData({ type: 'sync-player', senderId: myId, name: myName, score: players[myId].score, peerId: peer.id });
+                if(isMicOn && localAudioStream && data.peerId) callPeer(data.peerId);
+            } 
+            else if(data.type === 'sync-player') {
+                players[data.senderId] = { name: safeName, score: data.score, peerId: data.peerId };
+                updateUI();
+            }
+            else if(data.type === 'roll') {
+                setupEventState(data.chosenEvent, data.turnPlayerId, data.turnPlayerName);
+            } 
+            else if(data.type === 'score-update') {
+                if(players[data.senderId]) {
+                    players[data.senderId].score = data.newScore;
+                    updateUI();
+                }
+            }
+            else if(data.type === 'next-turn') {
+                // تلقائياً الانتقال للطرف الآخر وسحب سؤال جديد
+                setupEventState(data.chosenEvent, data.nextPlayerId, data.nextPlayerName);
+            }
+            else if(data.type === 'chat') {
+                appendChatMessage(safeName, sanitize(data.text));
+            }
+        }
 
+        function rollTurn() {
+            const playerKeys = Object.keys(players);
+            if(playerKeys.length === 0) return;
+            const randomPlayerId = playerKeys[Math.floor(Math.random() * playerKeys.length)];
+            
+            triggerNewRound(randomPlayerId);
+        }
 
-// قلوب طايرة
-for(let i=0;i<100;i++){
+        function triggerNewRound(targetPlayerId) {
+            if (availableEvents.length === 0) {
+                availableEvents = [...initialEventsData];
+            }
+            const qIndex = Math.floor(Math.random() * availableEvents.length);
+            const chosenEvent = availableEvents.splice(qIndex, 1)[0];
+            const targetName = players[targetPlayerId] ? players[targetPlayerId].name : "لاعب";
 
-let h=document.createElement("div");
+            setupEventState(chosenEvent, targetPlayerId, targetName);
+            broadcastData({ type: 'roll', chosenEvent: chosenEvent, turnPlayerId: targetPlayerId, turnPlayerName: targetName });
+        }
 
-h.className="fly";
-h.innerHTML="❤️";
+        function setupEventState(event, playerId, playerName) {
+            currentEvent = event;
+            currentTurnPlayerId = playerId;
 
-h.style.left=Math.random()*100+"%";
-h.style.top="100%";
-h.style.fontSize=Math.random()*25+15+"px";
+            document.getElementById('turn-display').innerText = `🎯 دور اللاعب: ${playerName} ${playerId === myId ? '(أنت)' : ''}`;
+            document.getElementById('activity-card').style.display = 'block';
+            document.getElementById('q-badge').innerText = currentEvent.type;
+            document.getElementById('question-text').innerText = currentEvent.q;
+            document.getElementById('feedback-text').innerText = "";
+            document.getElementById('roll-btn').style.display = 'none';
 
-document.body.appendChild(h);
+            const audioBox = document.getElementById('audio-player-box');
+            const songAudio = document.getElementById('song-audio');
+            const optGrid = document.getElementById('options-container');
+            const textGroup = document.getElementById('text-input-container');
 
-}
+            if(currentEvent.audioUrl) {
+                audioBox.style.display = 'block';
+                songAudio.src = currentEvent.audioUrl;
+                songAudio.play().catch(()=>{});
+            } else {
+                audioBox.style.display = 'none';
+                songAudio.pause();
+            }
 
-}
+            optGrid.style.display = 'none';
+            textGroup.style.display = 'none';
 
-</script>
+            if(currentEvent.mode === 'text') {
+                textGroup.style.display = 'flex';
+                document.getElementById('text-answer-input').value = '';
+                document.getElementById('text-answer-input').disabled = (myId !== currentTurnPlayerId);
+            } else {
+                optGrid.style.display = 'grid';
+                const optButtons = document.querySelectorAll('.opt-btn');
+                currentEvent.options.forEach((opt, idx) => {
+                    optButtons[idx].innerText = opt;
+                    optButtons[idx].disabled = (myId !== currentTurnPlayerId);
+                });
+            }
 
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(turnTimer);
+            timeLeft = 20;
+            document.getElementById('timer-badge').innerText = `⏱️ ${timeLeft}s`;
+
+            turnTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-badge').innerText = `⏱️ ${timeLeft}s`;
+                if(timeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    handleTimeOutOrWrong("انتهى الوقت ولم تجب! ❌");
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(selectedIndex) {
+            if(myId !== currentTurnPlayerId) return;
+            clearInterval(turnTimer);
+
+            const isCorrect = (selectedIndex === currentEvent.correct);
+            processAnswerResult(isCorrect, currentEvent.options[currentEvent.correct]);
+        }
+
+        function checkTextAnswer() {
+            if(myId !== currentTurnPlayerId) return;
+            const userAns = sanitize(document.getElementById('text-answer-input').value.trim());
+            if(!userAns) return;
+            clearInterval(turnTimer);
+
+            const isCorrect = userAns.toLowerCase() === currentEvent.correctText.toLowerCase();
+            processAnswerResult(isCorrect, currentEvent.correctText);
+        }
+
+        function handleTimeOutOrWrong(msg) {
+            if(myId === currentTurnPlayerId) {
+                players[myId].score = Math.max(0, players[myId].score - 1);
+                updateUI();
+                broadcastData({ type: 'score-update', newScore: players[myId].score });
+                
+                showFeedback(msg, false);
+                
+                // الانتقال التلقائي للطرف الآخر (صوطي وحدو)
+                setTimeout(() => {
+                    autoSwitchToNextPlayer();
+                }, 1500);
+            }
+        }
+
+        function processAnswerResult(isCorrect, correctAnsText) {
+            if(isCorrect) {
+                players[myId].score += 1;
+                showFeedback(`إجابة صحيحة! 🎉 (+1 نقطة)`, true);
+                updateUI();
+                broadcastData({ type: 'score-update', newScore: players[myId].score });
+                
+                // تفعيل زر السحب للسؤال الموالي
+                setTimeout(() => {
+                    document.getElementById('roll-btn').style.display = 'block';
+                    document.getElementById('activity-card').style.display = 'none';
+                }, 1500);
+            } else {
+                players[myId].score = Math.max(0, players[myId].score - 1);
+                showFeedback(`خطأ! الإجابة الصحيحة هي: (${correctAnsText}) ❌`, false);
+                updateUI();
+                broadcastData({ type: 'score-update', newScore: players[myId].score });
+
+                setTimeout(() => {
+                    autoSwitchToNextPlayer();
+                }, 1500);
+            }
+        }
+
+        function autoSwitchToNextPlayer() {
+            // إيجاد الطرف الآخر تلقائياً وتمرير الدور وسحب سؤال جديد
+            const playerKeys = Object.keys(players);
+            if(playerKeys.length < 2) {
+                document.getElementById('roll-btn').style.display = 'block';
+                document.getElementById('activity-card').style.display = 'none';
+                return;
+            }
+
+            const currentIndex = playerKeys.indexOf(currentTurnPlayerId);
+            const nextIndex = (currentIndex + 1) % playerKeys.length;
+            const nextPlayerId = playerKeys[nextIndex];
+            const nextPlayerName = players[nextPlayerId].name;
+
+            if (availableEvents.length === 0) availableEvents = [...initialEventsData];
+            const qIndex = Math.floor(Math.random() * availableEvents.length);
+            const chosenEvent = availableEvents.splice(qIndex, 1)[0];
+
+            setupEventState(chosenEvent, nextPlayerId, nextPlayerName);
+            broadcastData({ type: 'next-turn', chosenEvent: chosenEvent, nextPlayerId: nextPlayerId, nextPlayerName: nextPlayerName });
+        }
+
+        async function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            if (!isMicOn) {
+                try {
+                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    isMicOn = true;
+                    btn.classList.remove('mic-off');
+                    btn.classList.add('mic-on');
+                    Object.values(players).forEach(p => {
+                        if(p.peerId && p.peerId !== peer.id) callPeer(p.peerId);
+                    });
+                } catch (err) {
+                    alert("يجب السماح بالمايك!");
+                }
+            } else {
+                if (localAudioStream) localAudioStream.getAudioTracks().forEach(t => t.enabled = false);
+                isMicOn = false;
+                btn.classList.remove('mic-on');
+                btn.classList.add('mic-off');
+            }
+        }
+
+        function callPeer(peerId) {
+            if(!localAudioStream) return;
+            const call = peer.call(peerId, localAudioStream);
+            call.on('stream', (remoteStream) => addAudioStream(peerId, remoteStream));
+        }
+
+        function addAudioStream(id, stream) {
+            let audio = document.getElementById("audio_" + id);
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = "audio_" + id;
+                audio.autoplay = true;
+                document.getElementById('audio-container').appendChild(audio);
+            }
+            audio.srcObject = stream;
+        }
+
+        function toggleChat() { document.getElementById('side-chat').classList.toggle('open'); }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = sanitize(input.value.trim());
+            if(!text) return;
+            appendChatMessage('أنت', text);
+            broadcastData({ type: 'chat', senderName: myName, text: text });
+            input.value = '';
+        }
+
+        function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
+
+        function appendChatMessage(sender, text) {
+            const box = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-msg';
+            msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function showFeedback(text, isCorrect) {
+            const fb = document.getElementById('feedback-text');
+            fb.innerText = text;
+            fb.style.color = isCorrect ? 'var(--success)' : 'var(--danger)';
+        }
+
+        function updateUI() {
+            const box = document.getElementById('leaderboard');
+            box.innerHTML = '';
+            const sorted = Object.keys(players).map(id => ({ id, ...players[id] })).sort((a, b) => b.score - a.score);
+            sorted.forEach(p => {
+                const row = document.createElement('div');
+                row.className = `player-row ${p.id === myId ? 'me' : ''}`;
+                row.innerHTML = `<span><b>${p.name}</b> ${p.id === myId ? '(أنت)' : ''}</span> <span><b>${p.score}</b> نقطة</span>`;
+                box.appendChild(row);
+            });
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
 </body>
 </html>
