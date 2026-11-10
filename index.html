@@ -3,121 +3,197 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سر صغير لمريم ❤️</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إلى مريم ❤️</title>
+
 <style>
 *{box-sizing:border-box}
+
 body{
- margin:0;min-height:100vh;
- display:flex;align-items:center;justify-content:center;
- background:radial-gradient(circle at top,#a83261,#35091f 75%);
- color:white;font-family:Tahoma;text-align:center;
- overflow:hidden;padding:18px;
+ margin:0;
+ min-height:100vh;
+ font-family:Tahoma,Arial;
+ background:linear-gradient(145deg,#210817,#781c46,#e65383);
+ color:white;
+ text-align:center;
+ overflow-x:hidden;
+ overflow-y:auto;
+ padding:25px 15px 50px;
 }
+
 .card{
- width:100%;max-width:420px;
- padding:30px 20px;
+ width:100%;
+ max-width:440px;
+ margin:20px auto;
+ padding:30px 22px;
+ background:rgba(255,255,255,.12);
  border:1px solid #ffffff40;
  border-radius:28px;
- background:#ffffff12;
- backdrop-filter:blur(15px);
- box-shadow:0 15px 50px #0005;
+ backdrop-filter:blur(12px);
+ box-shadow:0 15px 45px #0005;
+ position:relative;
  z-index:2;
 }
-h1{color:#ffc6d9;font-size:34px}
-p{line-height:2}
-.envelope{
- font-size:85px;cursor:pointer;
- animation:float 2s infinite;
-}
+
+.flower{font-size:70px;animation:float 3s infinite}
+
+h1{color:#ffd0df;font-size:38px}
+
+p{line-height:2;font-size:16px}
+
 button{
- background:#ffc4d8;color:#651a3c;
- border:0;border-radius:30px;
- padding:14px 27px;font-size:17px;
- font-weight:bold;cursor:pointer;
- margin:12px;
+ border:0;
+ border-radius:30px;
+ padding:15px 25px;
+ background:#ffc7dc;
+ color:#741b43;
+ font-size:17px;
+ font-weight:bold;
+ cursor:pointer;
+ margin:15px 0;
 }
-#letter{display:none;animation:show 1.2s}
-#final{display:none;color:#ffd0e0;font-size:22px}
-.small{color:#ffdce8}
+
+#letter,#surprise{
+ display:none;
+ animation:appear 1s ease;
+}
+
+.love{
+ color:#ffd0df;
+ font-size:25px;
+}
+
 .heart{
- position:fixed;top:-30px;
- animation:fall 6s linear infinite;
+ position:fixed;
+ top:-30px;
+ z-index:1;
  pointer-events:none;
+ animation:fall linear forwards;
 }
-@keyframes float{50%{transform:translateY(-12px)}}
-@keyframes show{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
-@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:0}}
+
+@keyframes float{
+ 50%{transform:translateY(-12px)}
+}
+@keyframes appear{
+ from{opacity:0;transform:translateY(20px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@keyframes fall{
+ to{transform:translateY(110vh) rotate(360deg);opacity:0}
+}
 </style>
 </head>
+
 <body>
 
 <div class="card">
- <div style="font-size:35px">🌹✨</div>
- <p class="small">A LITTLE SURPRISE FOR YOU</p>
- <h1>مريم ❤️</h1>
- <p>هناك شيء صغير أريد أن يصل إلى قلبك...</p>
 
- <div class="envelope" onclick="openLetter()">💌</div>
- <p>اضغطي على الظرف لفتح رسالتك</p>
+<div class="flower">🌹</div>
+<div style="font-size:25px">❤️✨</div>
 
- <div id="letter">
-  <h2 style="color:#ffc6dc">إلى صاحبة أجمل اسم ❤️</h2>
-  <p>
-  مريم، هل تعلمين أن بعض الأشخاص يدخلون حياتنا
-  دون أن يعرفوا أنهم أصبحوا أجمل جزء منها؟
-  أنتِ واحدة من هؤلاء الأشخاص.
-  <br><br>
-  لو كان الحب كلمات، لكتبت لكِ كتاباً،
-  ولو كان الحب هدايا، لأهديتكِ العالم كله،
-  لكن حبي لكِ أكبر من أن تصفه الكلمات.
-  <br><br>
-  لا أريد أن تكوني سعيدة اليوم فقط،
-  بل أتمنى أن ترافقكِ السعادة في كل أيامك.
-  <br><br>
-  أنتِ حكاية جميلة أتمنى أن تبقى صفحاتها
-  مليئة بالفرح والذكريات الجميلة.
-  </p>
-  <button onclick="surprise()">عندي لكِ شيء آخر 🥹</button>
- </div>
+<h1>إلى مريم</h1>
 
- <div id="final">
-  <div style="font-size:65px">🌹❤️</div>
-  <h2>مريم، أنتِ مميزة جداً</h2>
-  <p>شكراً لأنكِ أنتِ، بكل تفاصيلكِ الجميلة.</p>
-  <h2>FOREVER SPECIAL 💗</h2>
- </div>
+<p>هناك رسالة كتبتها لكِ من أعماق قلبي...</p>
+
+<button onclick="openLetter()">افتحي رسالتك يا مريم 💌</button>
+
+<div id="letter">
+
+<hr style="border-color:#ffffff40">
+
+<h2 class="love">مريم الجميلة ❤️</h2>
+
+<p>
+لا أعرف من أين أبدأ، ولا كيف أصف لكِ ما أشعر به،
+لكنني أعرف أن وجودكِ جعل لأيامي معنى أجمل.
+</p>
+
+<p>
+أحياناً أتساءل كيف استطاعت إنسانة واحدة أن تصبح
+بهذه الأهمية في قلبي، وكيف أصبح اسمكِ
+من أجمل الأشياء التي أحب سماعها.
+</p>
+
+<p>
+مريم، لو استطعتِ أن تنظري إلى نفسكِ بعيني،
+لعرفتِ كم أنتِ مميزة بالنسبة إليّ،
+ولفهمتِ لماذا اخترت قلبي أن يميل إليكِ أنتِ.
+</p>
+
+<p>
+لا أعدكِ بأن تكون كل الأيام مثالية،
+لكنني أتمنى أن تكون أيامكِ مليئة بالفرح،
+وأن لا تفقدي ابتسامتكِ أبداً.
+</p>
+
+<p>
+قد لا أملك أجمل الكلمات،
+لكنني أملك مشاعر صادقة أتمنى أن تصلكِ كما هي.
+</p>
+
+<p class="love">
+أنتِ لستِ مجرد صدفة في حياتي،
+أنتِ حكاية جميلة أتمنى ألا تنتهي. ❤️
+</p>
+
+<button onclick="showSurprise()">المفاجأة الأخيرة 🥹</button>
+
+</div>
+
+<div id="surprise">
+
+<div style="font-size:75px">🌹💗</div>
+
+<h2 class="love">مريم... ❤️</h2>
+
+<p>
+إذا كان بإمكاني أن أختار شيئاً واحداً،
+فسأختار أن أراكِ سعيدة دائماً.
+</p>
+
+<p>
+شكراً لأنكِ أنتِ، بكل تفاصيلكِ الجميلة.
+</p>
+
+<h1>أحبكِ يا مريم ❤️</h1>
+
+<p>من شخص يحمل لكِ مكانة خاصة في قلبه 🥹</p>
+
+<div style="font-size:35px">💞🌸🦋</div>
+
+</div>
+
 </div>
 
 <script>
+
 function openLetter(){
  document.getElementById("letter").style.display="block";
- document.querySelector(".envelope").innerText="💖";
- document.querySelector(".envelope").onclick=null;
+ document.querySelector("button").style.display="none";
+ hearts();
 }
-function surprise(){
- document.getElementById("final").style.display="block";
- document.getElementById("letter").style.display="none";
- for(let i=0;i<50;i++){
-  let h=document.createElement("div");
-  h.className="heart";
-  h.innerText=["❤️","💗","🌹","✨","💕"][Math.floor(Math.random()*5)];
-  h.style.left=Math.random()*100+"vw";
-  h.style.animationDuration=(3+Math.random()*5)+"s";
-  h.style.fontSize=(18+Math.random()*22)+"px";
-  document.body.appendChild(h);
-  setTimeout(()=>h.remove(),8000);
+
+function showSurprise(){
+ document.getElementById("surprise").style.display="block";
+ hearts();
+}
+
+function hearts(){
+ for(let i=0;i<35;i++){
+  setTimeout(()=>{
+   let h=document.createElement("div");
+   h.className="heart";
+   h.innerText=["❤️","💕","💗","🌸","✨"][Math.floor(Math.random()*5)];
+   h.style.left=Math.random()*100+"vw";
+   h.style.fontSize=(18+Math.random()*20)+"px";
+   h.style.animationDuration=(3+Math.random()*4)+"s";
+   document.body.appendChild(h);
+   setTimeout(()=>h.remove(),8000);
+  },i*100);
  }
 }
-setInterval(()=>{
- let h=document.createElement("div");
- h.className="heart";
- h.innerText="💕";
- h.style.left=Math.random()*100+"vw";
- h.style.animationDuration="7s";
- document.body.appendChild(h);
- setTimeout(()=>h.remove(),7000);
-},700);
+
 </script>
+
 </body>
 </html>
